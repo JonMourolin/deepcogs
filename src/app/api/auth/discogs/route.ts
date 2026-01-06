@@ -14,6 +14,16 @@ export async function GET() {
     );
   }
 
+  // Check if user is already authenticated - skip OAuth flow
+  const cookieStore = await cookies();
+  const existingToken = cookieStore.get("discogs_access_token")?.value;
+  const existingUsername = cookieStore.get("discogs_username")?.value;
+
+  if (existingToken && existingUsername) {
+    // Already authenticated, redirect to dashboard
+    return NextResponse.redirect(`${appUrl}/dashboard`);
+  }
+
   try {
     // Get request token
     const callbackUrl = `${appUrl}/api/auth/discogs/callback`;
