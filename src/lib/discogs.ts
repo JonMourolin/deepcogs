@@ -146,7 +146,7 @@ export async function getRequestToken(
       headers: {
         Authorization: authHeader,
         "Content-Type": "application/x-www-form-urlencoded",
-        "User-Agent": "VinylDNA/1.0",
+        "User-Agent": "DeepCogs/1.0",
       },
     }
   );
@@ -197,7 +197,7 @@ export async function getAccessToken(
     headers: {
       Authorization: authHeader,
       "Content-Type": "application/x-www-form-urlencoded",
-      "User-Agent": "VinylDNA/1.0",
+      "User-Agent": "DeepCogs/1.0",
     },
   });
 
@@ -242,7 +242,7 @@ export function createDiscogsClient(
       method,
       headers: {
         Authorization: authHeader,
-        "User-Agent": "VinylDNA/1.0",
+        "User-Agent": "DeepCogs/1.0",
         Accept: "application/json",
       },
     });
@@ -359,7 +359,7 @@ export function createSimpleDiscogsClient(
       method,
       headers: {
         Authorization: `Discogs key=${consumerKey}, secret=${consumerSecret}`,
-        "User-Agent": "VinylDNA/1.0",
+        "User-Agent": "DeepCogs/1.0",
         Accept: "application/json",
       },
     });

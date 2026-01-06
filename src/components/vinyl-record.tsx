@@ -13,7 +13,7 @@ export function VinylRecord({
   size = 300,
   spinning = false,
   className,
-  label = "VINYL DNA",
+  label = "DEEPCOGS",
 }: VinylRecordProps) {
   return (
     <div

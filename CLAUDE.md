@@ -12,7 +12,7 @@ npm run lint     # Run ESLint
 
 ## Architecture
 
-This is a Next.js 16 App Router application that analyzes Discogs vinyl record collections. It uses Discogs OAuth 1.0a for authentication and stores session data in HTTP-only cookies (no database).
+DeepCogs is a Next.js 16 App Router application that analyzes Discogs vinyl record collections. It uses Discogs OAuth 1.0a for authentication and stores session data in HTTP-only cookies (no database).
 
 ### Core Data Flow
 

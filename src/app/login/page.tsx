@@ -47,9 +47,9 @@ function LoginContent() {
           className="flex items-center justify-center gap-3 mb-8"
         >
           <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-xl">V</span>
+            <span className="text-primary-foreground font-bold text-xl">D</span>
           </div>
-          <span className="font-bold text-2xl tracking-tight">Vinyl DNA</span>
+          <span className="font-bold text-2xl tracking-tight">DeepCogs</span>
         </Link>
 
         <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
@@ -89,7 +89,7 @@ function LoginContent() {
             </Button>
 
             <div className="text-center text-sm text-muted-foreground">
-              <p className="mb-2">By connecting, you allow Vinyl DNA to:</p>
+              <p className="mb-2">By connecting, you allow DeepCogs to:</p>
               <ul className="space-y-1">
                 <li className="flex items-center justify-center gap-2">
                   <svg

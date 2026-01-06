@@ -31,9 +31,9 @@ export default function Home() {
         <header className="flex items-center justify-between mb-24">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">V</span>
+              <span className="text-primary-foreground font-bold text-lg">D</span>
             </div>
-            <span className="font-bold text-xl tracking-tight">Vinyl DNA</span>
+            <span className="font-bold text-xl tracking-tight">DeepCogs</span>
           </div>
           <nav className="flex items-center gap-6">
             <Link
@@ -338,9 +338,9 @@ export default function Home() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold">V</span>
+                <span className="text-primary-foreground font-bold">D</span>
               </div>
-              <span className="font-bold">Vinyl DNA</span>
+              <span className="font-bold">DeepCogs</span>
             </div>
             <div className="text-sm text-muted-foreground">
               Data provided by{" "}

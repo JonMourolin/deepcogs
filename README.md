@@ -1,4 +1,4 @@
-# Vinyl DNA
+# DeepCogs
 
 Discover your musical identity by analyzing your Discogs record collection.
 

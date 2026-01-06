@@ -66,9 +66,9 @@ export function DashboardClient({ username }: DashboardClientProps) {
         <div className="container mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold">V</span>
+              <span className="text-primary-foreground font-bold">D</span>
             </div>
-            <span className="font-bold text-lg tracking-tight">Vinyl DNA</span>
+            <span className="font-bold text-lg tracking-tight">DeepCogs</span>
           </Link>
 
           <div className="flex items-center gap-4">

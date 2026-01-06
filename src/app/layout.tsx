@@ -15,7 +15,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Vinyl DNA | Discover Your Musical Identity",
+  title: "DeepCogs | Discover Your Musical Identity",
   description:
     "Analyze your record collection, discover your musical DNA, and compare taste with friends. Powered by Discogs.",
   keywords: [
@@ -27,9 +27,9 @@ export const metadata: Metadata = {
     "DNA",
     "analysis",
   ],
-  authors: [{ name: "Vinyl DNA" }],
+  authors: [{ name: "DeepCogs" }],
   openGraph: {
-    title: "Vinyl DNA | Discover Your Musical Identity",
+    title: "DeepCogs | Discover Your Musical Identity",
     description:
       "Analyze your record collection, discover your musical DNA, and compare taste with friends.",
     type: "website",
