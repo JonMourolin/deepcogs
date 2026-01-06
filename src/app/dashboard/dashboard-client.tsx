@@ -12,6 +12,7 @@ import { CollectionCompare } from "@/components/collection-compare";
 import { Recommendations } from "@/components/recommendations";
 import { DeepCuts } from "@/components/deep-cuts";
 import { DNACard } from "@/components/dna-card";
+import { CountryDistribution } from "@/components/country-distribution";
 import Link from "next/link";
 import type { DiscogsRelease } from "@/lib/discogs";
 
@@ -154,11 +155,17 @@ export function DashboardClient({ username }: DashboardClientProps) {
             ) : collection ? (
               <>
                 <DNACharts releases={collection.releases} />
-                <DNACard
-                  username={username}
-                  releases={collection.releases}
-                  isLoading={loading}
-                />
+                <div className="grid md:grid-cols-2 gap-6">
+                  <DNACard
+                    username={username}
+                    releases={collection.releases}
+                    isLoading={loading}
+                  />
+                  <CountryDistribution
+                    releases={collection.releases}
+                    isLoading={loading}
+                  />
+                </div>
               </>
             ) : (
               <Card>
