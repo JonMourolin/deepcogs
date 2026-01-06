@@ -102,3 +102,15 @@ Types:
 - test:     Adding tests
 - chore:    Maintenance
 ```
+
+### Releasing a Version
+
+1. Merge PR into `main`
+2. Update `CHANGELOG.md` with new version entry
+3. Commit changelog: `git add CHANGELOG.md && git commit -m "docs: update changelog for vX.X.X"`
+4. Bump version: `npm version patch|minor|major -m "chore: release v%s"`
+   - This updates both `package.json` and `package-lock.json`
+   - Creates a git commit and tag automatically
+5. Push: `git push && git push --tags`
+
+**Important:** Always verify `package.json`, `package-lock.json`, and `CHANGELOG.md` versions are in sync before pushing.
