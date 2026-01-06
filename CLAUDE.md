@@ -59,6 +59,8 @@ Uses Tailwind CSS 4 with OKLCH color palette. Theme colors defined in `src/app/g
 
 **IMPORTANT: ALWAYS follow this workflow. NEVER commit directly to main.**
 
+**STOP: NEVER run `gh pr merge`. Create the PR and STOP. Let the user merge it.**
+
 ### Branch Strategy
 
 ```
@@ -87,8 +89,14 @@ main                    # Production-ready code
    ```
 
 4. **Create PR** on GitHub to merge into `main`
+   ```bash
+   gh pr create --title "feat: ..." --body "..."
+   ```
+   **STOP HERE. Do NOT merge. Wait for user to review and merge.**
 
-5. **Delete branch** after merge
+5. **User merges PR** (not Claude!)
+
+6. **Delete branch** after merge
 
 ### Commit Message Format
 
