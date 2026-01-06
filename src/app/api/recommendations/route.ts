@@ -96,7 +96,8 @@ export async function POST(request: NextRequest) {
       }>;
     }[] = [];
 
-    for (const genre of genresToSearch) {
+    // Run searches in parallel for faster response
+    const searchPromises = genresToSearch.map(async (genre) => {
       const isGap = gaps.includes(genre);
       const reason = isGap
         ? `Expand your horizons - you have few ${genre} releases`
@@ -139,19 +140,21 @@ export async function POST(request: NextRequest) {
           });
 
         if (filtered.length > 0) {
-          recommendations.push({
+          return {
             genre,
             reason,
             releases: filtered,
-          });
+          };
         }
-
-        // Small delay between searches to respect rate limits
-        await new Promise((resolve) => setTimeout(resolve, 200));
+        return null;
       } catch (err) {
         console.error(`Search failed for genre ${genre}:`, err);
+        return null;
       }
-    }
+    });
+
+    const results = await Promise.all(searchPromises);
+    recommendations.push(...results.filter((r): r is NonNullable<typeof r> => r !== null));
 
     return NextResponse.json({
       recommendations,
