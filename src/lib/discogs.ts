@@ -339,6 +339,26 @@ export function createDiscogsClient(
       if (type) params.append("type", type);
       return makeRequest(`/database/search?${params.toString()}`);
     },
+
+    /**
+     * Add a release to the user's wantlist
+     */
+    async addToWantlist(
+      username: string,
+      releaseId: number
+    ): Promise<{ id: number; rating: number; notes: string }> {
+      return makeRequest(`/users/${username}/wants/${releaseId}`, "PUT");
+    },
+
+    /**
+     * Remove a release from the user's wantlist
+     */
+    async removeFromWantlist(
+      username: string,
+      releaseId: number
+    ): Promise<void> {
+      return makeRequest(`/users/${username}/wants/${releaseId}`, "DELETE");
+    },
   };
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,6 +12,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { DiscogsRelease } from "@/lib/discogs";
+
+type WantlistStatus = "idle" | "loading" | "added" | "error";
 
 interface RecommendationsProps {
   releases: DiscogsRelease[];
@@ -41,17 +43,21 @@ interface RecommendationsData {
 
 function ReleaseCard({
   release,
+  wantlistStatus,
+  onAddToWantlist,
 }: {
   release: Recommendation["releases"][0];
+  wantlistStatus: WantlistStatus;
+  onAddToWantlist: (releaseId: number) => void;
 }) {
   return (
-    <a
-      href={`https://www.discogs.com/master/${release.masterId}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group block"
-    >
-      <div className="flex gap-3 p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-all hover:scale-[1.02]">
+    <div className="flex gap-3 p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-all group">
+      <a
+        href={`https://www.discogs.com/master/${release.masterId}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex gap-3 flex-1 min-w-0"
+      >
         {release.thumb ? (
           <img
             src={release.thumb}
@@ -88,21 +94,108 @@ function ReleaseCard({
             </span>
           </div>
         </div>
-        <svg
-          className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0 self-center"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+      </a>
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            if (wantlistStatus === "idle") {
+              onAddToWantlist(release.id);
+            }
+          }}
+          disabled={wantlistStatus === "loading" || wantlistStatus === "added"}
+          className={`p-2 rounded-md transition-all ${
+            wantlistStatus === "added"
+              ? "bg-green-500/20 text-green-500 cursor-default"
+              : wantlistStatus === "loading"
+              ? "bg-muted text-muted-foreground cursor-wait"
+              : wantlistStatus === "error"
+              ? "bg-destructive/20 text-destructive hover:bg-destructive/30"
+              : "bg-muted/50 text-muted-foreground hover:bg-primary/20 hover:text-primary"
+          }`}
+          title={
+            wantlistStatus === "added"
+              ? "Added to wantlist"
+              : wantlistStatus === "loading"
+              ? "Adding..."
+              : wantlistStatus === "error"
+              ? "Failed - click to retry"
+              : "Add to wantlist"
+          }
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-          />
-        </svg>
+          {wantlistStatus === "loading" ? (
+            <svg
+              className="w-5 h-5 animate-spin"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+              />
+            </svg>
+          ) : wantlistStatus === "added" ? (
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          ) : (
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+              />
+            </svg>
+          )}
+        </button>
+        <a
+          href={`https://www.discogs.com/master/${release.masterId}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="p-2 rounded-md bg-muted/50 text-muted-foreground hover:bg-primary/20 hover:text-primary transition-all"
+          title="View on Discogs"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+            />
+          </svg>
+        </a>
       </div>
-    </a>
+    </div>
   );
 }
 
@@ -111,6 +204,28 @@ export function Recommendations({ releases, isLoading }: RecommendationsProps) {
     useState<RecommendationsData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [wantlistStatus, setWantlistStatus] = useState<Record<number, WantlistStatus>>({});
+
+  const handleAddToWantlist = useCallback(async (releaseId: number) => {
+    setWantlistStatus((prev) => ({ ...prev, [releaseId]: "loading" }));
+
+    try {
+      const response = await fetch("/api/wantlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ releaseId }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to add to wantlist");
+      }
+
+      setWantlistStatus((prev) => ({ ...prev, [releaseId]: "added" }));
+    } catch (err) {
+      console.error("Failed to add to wantlist:", err);
+      setWantlistStatus((prev) => ({ ...prev, [releaseId]: "error" }));
+    }
+  }, []);
 
   const fetchRecommendations = async () => {
     if (releases.length === 0) return;
@@ -344,7 +459,12 @@ export function Recommendations({ releases, isLoading }: RecommendationsProps) {
                 <CardContent>
                   <div className="space-y-3">
                     {rec.releases.map((release) => (
-                      <ReleaseCard key={release.id} release={release} />
+                      <ReleaseCard
+                        key={release.id}
+                        release={release}
+                        wantlistStatus={wantlistStatus[release.id] || "idle"}
+                        onAddToWantlist={handleAddToWantlist}
+                      />
                     ))}
                   </div>
                 </CardContent>
