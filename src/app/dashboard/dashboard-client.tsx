@@ -10,6 +10,7 @@ import { VinylRecord } from "@/components/vinyl-record";
 import { DNACharts } from "@/components/dna-charts";
 import { CollectionCompare } from "@/components/collection-compare";
 import { Recommendations } from "@/components/recommendations";
+import { DeepCuts } from "@/components/deep-cuts";
 import Link from "next/link";
 import type { DiscogsRelease } from "@/lib/discogs";
 
@@ -126,8 +127,9 @@ export function DashboardClient({ username }: DashboardClientProps) {
 
         {/* Tabs */}
         <Tabs defaultValue="dna" className="space-y-8">
-          <TabsList className="grid w-full max-w-md grid-cols-3 bg-secondary">
-            <TabsTrigger value="dna">Collection DNA</TabsTrigger>
+          <TabsList className="grid w-full max-w-lg grid-cols-4 bg-secondary">
+            <TabsTrigger value="dna">DNA</TabsTrigger>
+            <TabsTrigger value="deep-cuts">Deep Cuts</TabsTrigger>
             <TabsTrigger value="compare">Compare</TabsTrigger>
             <TabsTrigger value="discover">Discover</TabsTrigger>
           </TabsList>
@@ -169,6 +171,14 @@ export function DashboardClient({ username }: DashboardClientProps) {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          {/* Deep Cuts Tab */}
+          <TabsContent value="deep-cuts" className="space-y-8">
+            <DeepCuts
+              releases={collection?.releases || []}
+              isLoading={loading}
+            />
           </TabsContent>
 
           {/* Compare Tab */}
