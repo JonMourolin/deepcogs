@@ -11,6 +11,7 @@ import { DNACharts } from "@/components/dna-charts";
 import { CollectionCompare } from "@/components/collection-compare";
 import { Recommendations } from "@/components/recommendations";
 import { DeepCuts } from "@/components/deep-cuts";
+import { DNACard } from "@/components/dna-card";
 import Link from "next/link";
 import type { DiscogsRelease } from "@/lib/discogs";
 
@@ -151,7 +152,14 @@ export function DashboardClient({ username }: DashboardClientProps) {
                 ))}
               </div>
             ) : collection ? (
-              <DNACharts releases={collection.releases} />
+              <>
+                <DNACharts releases={collection.releases} />
+                <DNACard
+                  username={username}
+                  releases={collection.releases}
+                  isLoading={loading}
+                />
+              </>
             ) : (
               <Card>
                 <CardContent className="py-12 text-center">
