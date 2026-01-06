@@ -57,6 +57,8 @@ Uses Tailwind CSS 4 with OKLCH color palette. Theme colors defined in `src/app/g
 
 ## Git Workflow
 
+**IMPORTANT: ALWAYS follow this workflow. NEVER commit directly to main.**
+
 ### Branch Strategy
 
 ```
