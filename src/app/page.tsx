@@ -1,361 +1,343 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
-import { VinylRecord } from "@/components/vinyl-record";
-import Link from "next/link";
 
 export default function Home() {
   return (
-    <main className="min-h-screen relative overflow-hidden">
-      {/* Background gradient */}
+    <main className="min-h-screen flex flex-col lg:flex-row">
+      {/* LEFT PANEL - Login/Connect Section */}
       <div
-        className="fixed inset-0 -z-10"
-        style={{
-          background: `
-            radial-gradient(ellipse at 20% 20%, oklch(0.18 0.03 45 / 0.3) 0%, transparent 50%),
-            radial-gradient(ellipse at 80% 80%, oklch(0.20 0.02 30 / 0.5) 0%, transparent 50%),
-            oklch(0.12 0.015 30)
-          `,
-        }}
-      />
-
-      {/* Floating records decoration */}
-      <div className="fixed top-10 -right-20 opacity-20 blur-sm">
-        <VinylRecord size={400} spinning />
-      </div>
-      <div className="fixed -bottom-32 -left-32 opacity-10 blur-sm">
-        <VinylRecord size={500} spinning />
-      </div>
-
-      {/* Content */}
-      <div className="relative z-10 container mx-auto px-6 py-12">
-        {/* Header */}
-        <header className="flex items-center justify-between mb-24">
+        className="lg:w-1/2 min-h-screen flex flex-col justify-between p-8 lg:p-16"
+        style={{ background: "#FDFBF7" }}
+      >
+        {/* Logo */}
+        <header>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">D</span>
+            <div
+              className="w-12 h-12 rounded-full flex items-center justify-center"
+              style={{ background: "linear-gradient(135deg, #1a1a1a 0%, #333 100%)" }}
+            >
+              <span className="text-white font-black text-xl">D</span>
             </div>
-            <span className="font-bold text-xl tracking-tight">DeepCogs</span>
+            <span className="font-black text-2xl tracking-tight text-gray-900">
+              DeepCogs
+            </span>
           </div>
-          <nav className="flex items-center gap-6">
-            <Link
-              href="#features"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Features
-            </Link>
-            <Link
-              href="#how-it-works"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              How it works
-            </Link>
-            <Button asChild>
-              <Link href="/login">Connect Discogs</Link>
-            </Button>
-          </nav>
         </header>
 
-        {/* Hero section */}
-        <section className="grid lg:grid-cols-2 gap-16 items-center min-h-[70vh]">
-          <div className="space-y-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-sm">
-              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              Powered by Discogs API
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col justify-center max-w-md">
+          <h1
+            className="text-4xl lg:text-5xl leading-tight mb-5 text-gray-900"
+            style={{ fontFamily: "var(--font-serif), 'Times New Roman', serif" }}
+          >
+            Connect your collection
+          </h1>
+
+          <p className="text-lg leading-relaxed mb-8 text-gray-600">
+            Sign in with your Discogs account to analyze your vinyl collection
+            and discover your musical DNA.
+          </p>
+
+          <div className="space-y-6">
+            <Button
+              asChild
+              size="lg"
+              className="w-full h-14 text-base font-bold rounded-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
+              style={{
+                background: "linear-gradient(135deg, #E67E22 0%, #D35400 100%)",
+                color: "#fff",
+                boxShadow: "0 4px 20px rgba(230, 126, 34, 0.4)",
+              }}
+            >
+              <a href="/api/auth/discogs" className="flex items-center justify-center gap-3">
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2" />
+                  <circle cx="12" cy="12" r="3" />
+                  <circle cx="12" cy="12" r="6" fill="none" stroke="currentColor" strokeWidth="1" opacity="0.5" />
+                </svg>
+                Connect with Discogs
+              </a>
+            </Button>
+
+            {/* Permissions list */}
+            <div className="text-sm text-gray-500">
+              <p className="mb-3">By connecting, you allow DeepCogs to:</p>
+              <ul className="space-y-2">
+                {["View your collection", "View your wantlist", "Read your profile info"].map(
+                  (permission) => (
+                    <li key={permission} className="flex items-center gap-2">
+                      <svg
+                        className="w-4 h-4 flex-shrink-0 text-amber-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2.5}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      <span className="text-gray-700">{permission}</span>
+                    </li>
+                  )
+                )}
+              </ul>
             </div>
 
-            <h1 className="text-5xl lg:text-7xl font-bold leading-[1.1] tracking-tight">
-              Discover your
-              <br />
-              <span
-                className="text-transparent bg-clip-text"
+            {/* Create account link */}
+            <div className="pt-6 border-t border-gray-200">
+              <p className="text-sm text-gray-500">
+                Don&apos;t have a Discogs account?{" "}
+                <a
+                  href="https://www.discogs.com/users/create"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-amber-600 hover:text-amber-700 underline hover:no-underline font-medium"
+                >
+                  Create one free
+                </a>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <footer className="space-y-2">
+          <p className="text-sm text-gray-500">
+            Your data stays private. We never modify your collection.
+          </p>
+          <p className="text-xs text-gray-400">
+            Data via{" "}
+            <a
+              href="https://discogs.com"
+              className="underline hover:no-underline hover:text-gray-600"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Discogs
+            </a>
+            . Not affiliated.
+          </p>
+        </footer>
+      </div>
+
+      {/* RIGHT PANEL - Value Proposition */}
+      <div
+        className="lg:w-1/2 min-h-screen relative overflow-hidden flex items-center justify-center p-8 lg:p-16"
+        style={{
+          background: "linear-gradient(135deg, #1a1410 0%, #0d0a08 50%, #1a1410 100%)",
+        }}
+      >
+        {/* Decorative vinyl grooves */}
+        <div
+          className="absolute inset-0 opacity-20"
+          style={{
+            background: `
+              repeating-radial-gradient(
+                circle at 50% 35%,
+                transparent 0px,
+                transparent 60px,
+                rgba(230, 126, 34, 0.15) 61px,
+                transparent 62px
+              )
+            `,
+          }}
+        />
+
+        {/* Floating accent shapes */}
+        <div
+          className="absolute top-16 right-16 w-32 h-32 rounded-full blur-3xl opacity-60"
+          style={{ background: "rgba(230, 126, 34, 0.5)" }}
+        />
+        <div
+          className="absolute bottom-24 left-12 w-40 h-40 rounded-full blur-3xl opacity-40"
+          style={{ background: "rgba(211, 84, 0, 0.4)" }}
+        />
+
+        {/* Content */}
+        <div className="relative z-10 max-w-lg">
+          {/* Vinyl illustration */}
+          <div className="mb-10 flex justify-center">
+            <div className="relative">
+              {/* Vinyl record */}
+              <div
+                className="w-56 h-56 lg:w-72 lg:h-72 rounded-full animate-spin-slow relative"
                 style={{
-                  backgroundImage:
-                    "linear-gradient(135deg, oklch(0.80 0.16 55) 0%, oklch(0.65 0.18 45) 100%)",
+                  background: `
+                    radial-gradient(circle at center,
+                      #0a0a0a 0%,
+                      #0a0a0a 14%,
+                      #1a1a1a 15%,
+                      #0f0f0f 16%,
+                      #1a1a1a 17%,
+                      #0f0f0f 18%,
+                      #1a1a1a 25%,
+                      #0f0f0f 26%,
+                      #1a1a1a 35%,
+                      #0f0f0f 36%,
+                      #1a1a1a 45%,
+                      #0f0f0f 46%,
+                      #141414 100%
+                    )
+                  `,
+                  boxShadow: `
+                    0 0 0 3px #2a2a2a,
+                    0 0 80px rgba(230, 126, 34, 0.3),
+                    0 20px 60px rgba(0, 0, 0, 0.6),
+                    inset 0 0 40px rgba(0, 0, 0, 0.8)
+                  `,
                 }}
               >
-                musical DNA
-              </span>
-            </h1>
+                {/* Vinyl shine/reflection */}
+                <div
+                  className="absolute inset-0 rounded-full opacity-30"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.05) 100%)",
+                  }}
+                />
 
-            <p className="text-xl text-muted-foreground max-w-lg leading-relaxed">
-              Analyze your vinyl collection, uncover patterns in your taste, and
-              see how your music aligns with friends. What does your record shelf
-              say about you?
-            </p>
+                {/* Center label */}
+                <div
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 lg:w-24 lg:h-24 rounded-full flex items-center justify-center"
+                  style={{
+                    background: "linear-gradient(135deg, #E67E22 0%, #D35400 100%)",
+                    boxShadow: "inset 0 2px 10px rgba(0,0,0,0.4), 0 0 20px rgba(230,126,34,0.5)",
+                  }}
+                >
+                  {/* Label texture */}
+                  <div
+                    className="absolute inset-2 rounded-full opacity-20"
+                    style={{
+                      background: "repeating-radial-gradient(circle at center, transparent 0px, transparent 2px, rgba(0,0,0,0.1) 3px, transparent 4px)",
+                    }}
+                  />
+                  {/* Spindle hole */}
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{
+                      background: "#1a1a1a",
+                      boxShadow: "inset 0 1px 3px rgba(0,0,0,0.8)",
+                    }}
+                  />
+                </div>
+              </div>
 
-            <div className="flex flex-wrap gap-4">
-              <Button size="lg" className="glow-amber" asChild>
-                <Link href="/login">
-                  Connect Your Collection
-                  <svg
-                    className="ml-2 w-5 h-5"
+              {/* DNA helix overlay */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <svg
+                  viewBox="0 0 100 100"
+                  className="w-40 h-40 lg:w-52 lg:h-52"
+                  style={{ filter: "drop-shadow(0 0 15px rgba(230, 126, 34, 0.6))" }}
+                >
+                  {/* Helix strand 1 */}
+                  <path
+                    d="M30 15 Q50 30 70 15 Q50 30 30 45 Q50 60 70 45 Q50 60 30 75 Q50 90 70 75"
                     fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 7l5 5m0 0l-5 5m5-5H6"
-                    />
-                  </svg>
-                </Link>
-              </Button>
-              <Button size="lg" variant="outline" asChild>
-                <Link href="#features">See Demo</Link>
-              </Button>
-            </div>
-
-            {/* Stats */}
-            <div className="flex gap-12 pt-8 border-t border-border">
-              <div>
-                <div className="text-3xl font-bold text-primary">15M+</div>
-                <div className="text-sm text-muted-foreground">Releases in database</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-primary">8M+</div>
-                <div className="text-sm text-muted-foreground">Active collectors</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-primary">100%</div>
-                <div className="text-sm text-muted-foreground">Free to use</div>
+                    stroke="#E67E22"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    opacity="0.9"
+                  />
+                  {/* Helix strand 2 */}
+                  <path
+                    d="M70 15 Q50 30 30 15 Q50 30 70 45 Q50 60 30 45 Q50 60 70 75 Q50 90 30 75"
+                    fill="none"
+                    stroke="#F39C12"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    opacity="0.9"
+                  />
+                  {/* Connection dots */}
+                  {[22, 37, 52, 67, 82].map((y, i) => (
+                    <g key={i}>
+                      <circle
+                        cx={i % 2 === 0 ? 38 : 62}
+                        cy={y}
+                        r="4"
+                        fill="#E67E22"
+                      />
+                      <circle
+                        cx={i % 2 === 0 ? 62 : 38}
+                        cy={y}
+                        r="4"
+                        fill="#F39C12"
+                      />
+                      {/* Connecting line */}
+                      <line
+                        x1={i % 2 === 0 ? 38 : 62}
+                        y1={y}
+                        x2={i % 2 === 0 ? 62 : 38}
+                        y2={y}
+                        stroke="rgba(230,126,34,0.4)"
+                        strokeWidth="1"
+                      />
+                    </g>
+                  ))}
+                </svg>
               </div>
             </div>
           </div>
 
-          {/* Vinyl visualization */}
-          <div className="flex justify-center lg:justify-end">
-            <div className="relative">
-              <VinylRecord size={420} spinning />
-              {/* DNA helix overlay hint */}
+          {/* Value prop text */}
+          <div className="text-center">
+            <h2
+              className="text-3xl lg:text-4xl mb-4 text-white"
+              style={{ fontFamily: "var(--font-serif), 'Times New Roman', serif" }}
+            >
+              Your Musical DNA
+            </h2>
+            <p className="text-lg leading-relaxed mb-8 text-gray-400">
+              Genre breakdowns, decade distributions, label obsessions—see the
+              patterns that make your collection uniquely yours.
+            </p>
+
+            {/* Feature pills */}
+            <div className="flex flex-wrap justify-center gap-3">
+              {["Genre DNA", "Compare Friends", "Find Gaps", "Get Recommendations"].map(
+                (feature) => (
+                  <span
+                    key={feature}
+                    className="px-4 py-2 rounded-full text-sm font-medium transition-all hover:scale-105"
+                    style={{
+                      background: "rgba(230, 126, 34, 0.15)",
+                      color: "#E67E22",
+                      border: "1px solid rgba(230, 126, 34, 0.3)",
+                    }}
+                  >
+                    {feature}
+                  </span>
+                )
+              )}
+            </div>
+
+            {/* Page indicators */}
+            <div className="flex justify-center gap-2 mt-10">
               <div
-                className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                style={{
-                  background:
-                    "radial-gradient(circle at center, oklch(0.75 0.15 55 / 0.1) 0%, transparent 70%)",
-                }}
+                className="w-8 h-2 rounded-full"
+                style={{ background: "#E67E22" }}
+              />
+              <div
+                className="w-2 h-2 rounded-full"
+                style={{ background: "rgba(255,255,255,0.2)" }}
+              />
+              <div
+                className="w-2 h-2 rounded-full"
+                style={{ background: "rgba(255,255,255,0.2)" }}
               />
             </div>
           </div>
-        </section>
+        </div>
 
-        {/* Features section */}
-        <section id="features" className="py-32">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">Three ways to explore</h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Your vinyl collection is more than records—it&apos;s a map of your
-              musical journey
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Feature 1 */}
-            <div className="group p-8 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-300">
-              <div
-                className="w-14 h-14 rounded-xl mb-6 flex items-center justify-center"
-                style={{
-                  background:
-                    "linear-gradient(135deg, oklch(0.72 0.18 45) 0%, oklch(0.60 0.15 40) 100%)",
-                }}
-              >
-                <svg
-                  className="w-7 h-7 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold mb-3">Collection DNA</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Visualize your collection&apos;s genre breakdown, decade
-                distribution, top labels, and discover blind spots in your
-                musical taste.
-              </p>
-            </div>
-
-            {/* Feature 2 */}
-            <div className="group p-8 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-300">
-              <div
-                className="w-14 h-14 rounded-xl mb-6 flex items-center justify-center"
-                style={{
-                  background:
-                    "linear-gradient(135deg, oklch(0.65 0.14 180) 0%, oklch(0.50 0.12 175) 100%)",
-                }}
-              >
-                <svg
-                  className="w-7 h-7 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold mb-3">Compare Collections</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                See how your taste aligns with friends. Find overlapping
-                records, discover what they have that you don&apos;t, and spot
-                trade opportunities.
-              </p>
-            </div>
-
-            {/* Feature 3 */}
-            <div className="group p-8 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-300">
-              <div
-                className="w-14 h-14 rounded-xl mb-6 flex items-center justify-center"
-                style={{
-                  background:
-                    "linear-gradient(135deg, oklch(0.80 0.16 85) 0%, oklch(0.65 0.14 80) 100%)",
-                }}
-              >
-                <svg
-                  className="w-7 h-7 text-black"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold mb-3">Smart Recommendations</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Based on your DNA profile, discover releases that fill gaps in
-                your collection. Expand your horizons with personalized
-                suggestions.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* How it works */}
-        <section id="how-it-works" className="py-32">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">Simple setup</h2>
-            <p className="text-muted-foreground text-lg">
-              Connect your Discogs account and start exploring in seconds
-            </p>
-          </div>
-
-          <div className="flex flex-col md:flex-row items-center justify-center gap-8">
-            {[
-              { step: "01", title: "Connect", desc: "Link your Discogs account" },
-              { step: "02", title: "Analyze", desc: "We scan your collection" },
-              { step: "03", title: "Discover", desc: "Explore your musical DNA" },
-            ].map((item, i) => (
-              <div key={item.step} className="flex items-center gap-8">
-                <div className="text-center">
-                  <div className="text-6xl font-bold text-muted-foreground/20 mb-2">
-                    {item.step}
-                  </div>
-                  <div className="text-xl font-bold">{item.title}</div>
-                  <div className="text-muted-foreground">{item.desc}</div>
-                </div>
-                {i < 2 && (
-                  <svg
-                    className="w-8 h-8 text-muted-foreground/30 hidden md:block"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 7l5 5m0 0l-5 5m5-5H6"
-                    />
-                  </svg>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* CTA */}
-        <section className="py-32">
-          <div
-            className="rounded-3xl p-12 md:p-20 text-center relative overflow-hidden"
-            style={{
-              background: `
-                radial-gradient(ellipse at top, oklch(0.25 0.04 45) 0%, oklch(0.16 0.02 30) 100%)
-              `,
-            }}
-          >
-            <div className="relative z-10">
-              <h2 className="text-4xl md:text-5xl font-bold mb-6">
-                Ready to discover your DNA?
-              </h2>
-              <p className="text-xl text-muted-foreground mb-8 max-w-xl mx-auto">
-                Join thousands of collectors who&apos;ve uncovered new insights
-                about their musical taste.
-              </p>
-              <Button size="lg" className="glow-amber" asChild>
-                <Link href="/login">
-                  Get Started Free
-                  <svg
-                    className="ml-2 w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 7l5 5m0 0l-5 5m5-5H6"
-                    />
-                  </svg>
-                </Link>
-              </Button>
-            </div>
-
-            {/* Background decoration */}
-            <div className="absolute -right-20 -bottom-20 opacity-10">
-              <VinylRecord size={400} />
-            </div>
-          </div>
-        </section>
-
-        {/* Footer */}
-        <footer className="py-12 border-t border-border">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold">D</span>
-              </div>
-              <span className="font-bold">DeepCogs</span>
-            </div>
-            <div className="text-sm text-muted-foreground">
-              Data provided by{" "}
-              <a
-                href="https://www.discogs.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline hover:text-foreground"
-              >
-                Discogs
-              </a>
-              . Not affiliated with Discogs.
-            </div>
-          </div>
-        </footer>
+        {/* Corner accent */}
+        <div
+          className="absolute bottom-0 right-0 w-64 h-64 pointer-events-none"
+          style={{
+            background: "radial-gradient(circle at bottom right, rgba(230,126,34,0.1) 0%, transparent 70%)",
+          }}
+        />
       </div>
     </main>
   );
