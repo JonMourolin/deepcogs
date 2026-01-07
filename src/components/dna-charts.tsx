@@ -46,6 +46,9 @@ const ODDITY_PATTERNS = {
   limited: /limited|numbered/i,
 };
 
+// Keywords for repress detection
+const REPRESS_PATTERN = /reissue|re-issue|remaster|repress|re-press|2nd\s*press|second\s*press|180\s*g/i;
+
 function analyzeCollection(releases: DiscogsRelease[]) {
   const genres: Record<string, number> = {};
   const styles: Record<string, number> = {};
@@ -59,6 +62,7 @@ function analyzeCollection(releases: DiscogsRelease[]) {
   let testPressings = 0;
   let promos = 0;
   let limited = 0;
+  let represses = 0;
 
   releases.forEach((release) => {
     const info = release.basic_information;
@@ -71,6 +75,7 @@ function analyzeCollection(releases: DiscogsRelease[]) {
     if (ODDITY_PATTERNS.testPressing.test(formatDescriptions)) testPressings++;
     if (ODDITY_PATTERNS.promo.test(formatDescriptions)) promos++;
     if (ODDITY_PATTERNS.limited.test(formatDescriptions)) limited++;
+    if (REPRESS_PATTERN.test(formatDescriptions)) represses++;
 
     // Genres
     info.genres?.forEach((genre) => {
@@ -129,6 +134,7 @@ function analyzeCollection(releases: DiscogsRelease[]) {
       max: Math.max(...Object.keys(years).map(Number)),
     },
     oddities: { testPressings, promos, limited },
+    represses,
   };
 }
 
@@ -300,16 +306,16 @@ export function DNACharts({ releases }: DNAChartsProps) {
           </CardContent>
         </Card>
 
-        {/* Oddities */}
+        {/* Oddities & Pressings */}
         <Card>
           <CardHeader>
-            <CardTitle>Oddities</CardTitle>
+            <CardTitle>Oddities & Pressings</CardTitle>
             <CardDescription>
-              Test pressings, promos, and limited editions
+              Rare formats and pressing breakdown
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-5 gap-3">
               <div className="text-center p-3 rounded-lg bg-purple-500/10">
                 <p className="text-2xl font-bold text-purple-500">
                   {analysis.oddities.testPressings}
@@ -326,7 +332,19 @@ export function DNACharts({ releases }: DNAChartsProps) {
                 <p className="text-2xl font-bold text-amber-500">
                   {analysis.oddities.limited}
                 </p>
-                <p className="text-xs text-muted-foreground">Limited Editions</p>
+                <p className="text-xs text-muted-foreground">Limited</p>
+              </div>
+              <div className="text-center p-3 rounded-lg bg-green-500/10">
+                <p className="text-2xl font-bold text-green-500">
+                  {analysis.totalReleases - analysis.represses}
+                </p>
+                <p className="text-xs text-muted-foreground">Originals</p>
+              </div>
+              <div className="text-center p-3 rounded-lg bg-red-500/10">
+                <p className="text-2xl font-bold text-red-500">
+                  {analysis.represses}
+                </p>
+                <p className="text-xs text-muted-foreground">Represses</p>
               </div>
             </div>
           </CardContent>
