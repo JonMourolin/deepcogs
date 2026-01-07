@@ -57,7 +57,7 @@ Uses Tailwind CSS 4 with OKLCH color palette. Theme colors defined in `src/app/g
 
 ## Git Workflow
 
-**IMPORTANT: ALWAYS follow this workflow. NEVER commit directly to main.**
+**NEVER commit directly to main. NEVER merge without user approval.**
 
 ### Branch Strategy
 
@@ -70,7 +70,7 @@ main                    # Production-ready code
 
 ### Workflow
 
-1. **Create branch** before starting work:
+1. **Create branch** before starting ANY work:
    ```bash
    git checkout -b feature/feature-name
    ```
@@ -86,9 +86,20 @@ main                    # Production-ready code
    git push -u origin feature/feature-name
    ```
 
-4. **Create PR** on GitHub to merge into `main`
+4. **Create PR** on GitHub:
+   ```bash
+   gh pr create --title "feat: ..." --body "..."
+   ```
 
-5. **Delete branch** after merge
+5. **STOP. Wait for user approval.**
+   - User will test the changes
+   - User will say "merge" or give approval
+   - **NEVER run `gh pr merge` without explicit user approval**
+
+6. **Merge** only after user says to:
+   ```bash
+   gh pr merge <number> --merge
+   ```
 
 ### Commit Message Format
 
@@ -107,12 +118,21 @@ Types:
 
 ### Releasing a Version
 
-1. Merge PR into `main`
-2. Update `CHANGELOG.md` with new version entry
-3. Commit changelog: `git add CHANGELOG.md && git commit -m "docs: update changelog for vX.X.X"`
-4. Bump version: `npm version patch|minor|major -m "chore: release v%s"`
-   - This updates both `package.json` and `package-lock.json`
-   - Creates a git commit and tag automatically
-5. Push: `git push && git push --tags`
+**Requires user approval at each step.**
 
-**Important:** Always verify `package.json`, `package-lock.json`, and `CHANGELOG.md` versions are in sync before pushing.
+1. User approves version bump
+2. Create release branch:
+   ```bash
+   git checkout -b chore/release-x.x.x
+   ```
+3. Update `CHANGELOG.md` with new version entry
+4. Commit changelog
+5. Bump version: `npm version patch|minor|major`
+6. Push branch and create PR
+7. **STOP. Wait for user approval.**
+8. After user approves, merge PR
+9. Push tags: `git push --tags`
+
+### Deploying
+
+**NEVER deploy without user approval.** Vercel auto-deploys from main, so merging = deploying. Always wait for user to approve merge.
