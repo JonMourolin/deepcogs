@@ -125,13 +125,18 @@ Types:
    ```bash
    git checkout -b chore/release-x.x.x
    ```
-3. Update `CHANGELOG.md` with new version entry
+3. **ALWAYS update `CHANGELOG.md`** with new version entry (never skip this)
 4. Commit changelog
 5. Bump version: `npm version patch|minor|major`
-6. Push branch and create PR
-7. **STOP. Wait for user approval.**
-8. After user approves, merge PR
-9. Push tags: `git push --tags`
+6. **Verify version sync** before pushing:
+   - `package.json` version
+   - `package-lock.json` version
+   - `CHANGELOG.md` has matching version entry
+   - Git tag will match (created by npm version)
+7. Push branch and create PR
+8. **STOP. Wait for user approval.**
+9. After user approves, merge PR
+10. Push tags: `git push --tags`
 
 ### Deploying
 
