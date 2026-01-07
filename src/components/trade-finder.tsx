@@ -250,6 +250,9 @@ export function TradeFinder({
           <CardDescription>
             Find records you own that a friend wants. Enter their Discogs username
             to discover trade opportunities.
+            <span className="block mt-2 text-amber-500">
+              Note: Your friend must have a public Discogs collection and wantlist.
+            </span>
           </CardDescription>
         </CardHeader>
         <CardContent>
