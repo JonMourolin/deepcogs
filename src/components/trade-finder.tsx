@@ -39,10 +39,15 @@ interface TradeOpportunity {
   matchedWant: WantlistItem;
 }
 
+interface ReverseTradeOpportunity {
+  release: DiscogsRelease;
+  matchedWant: WantlistItem;
+}
+
 interface TradeResult {
   friendUsername: string;
   youCanOffer: TradeOpportunity[];
-  theyCanOffer: TradeOpportunity[];
+  theyCanOffer: ReverseTradeOpportunity[];
 }
 
 function TradeCard({ opportunity }: { opportunity: TradeOpportunity }) {
@@ -164,10 +169,34 @@ export function TradeFinder({
           )!,
         }));
 
-      // For reverse matching, we'd need our own wantlist
-      // For now, show what they have that might interest us (from their collection)
-      // This is a simplified version - ideally we'd fetch our own wantlist
-      const theyCanOffer: TradeOpportunity[] = [];
+      // Fetch my wantlist to find what friend has that I want
+      let theyCanOffer: ReverseTradeOpportunity[] = [];
+      try {
+        const myWantlistResponse = await fetch(
+          `/api/wantlist/${encodeURIComponent(myUsername)}`
+        );
+
+        if (myWantlistResponse.ok) {
+          const myWantlistData = await myWantlistResponse.json();
+          const myWants: WantlistItem[] = myWantlistData.wants;
+
+          // Find friend's collection items that match my wantlist
+          const myWantMasterIds = new Set(
+            myWants.map((w) => w.basic_information.master_id).filter(Boolean)
+          );
+
+          theyCanOffer = friendCollection
+            .filter((r) => myWantMasterIds.has(r.basic_information.master_id))
+            .map((release) => ({
+              release,
+              matchedWant: myWants.find(
+                (w) => w.basic_information.master_id === release.basic_information.master_id
+              )!,
+            }));
+        }
+      } catch (err) {
+        console.error("Failed to fetch my wantlist:", err);
+      }
 
       setResult({
         friendUsername,
@@ -221,6 +250,9 @@ export function TradeFinder({
           <CardDescription>
             Find records you own that a friend wants. Enter their Discogs username
             to discover trade opportunities.
+            <span className="block mt-2 text-amber-500">
+              Note: Your friend must have a public Discogs collection and wantlist.
+            </span>
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -272,24 +304,16 @@ export function TradeFinder({
 
       {/* Results */}
       {result && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              Trade Opportunities with {result.friendUsername}
-              {result.youCanOffer.length > 0 && (
-                <Badge variant="default" className="bg-green-500">
-                  {result.youCanOffer.length} matches
-                </Badge>
-              )}
-            </CardTitle>
-            <CardDescription>
-              Records you have that {result.friendUsername} wants
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {result.youCanOffer.length === 0 ? (
-              <div className="text-center py-8">
-                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+        <div className="space-y-6">
+          {/* Summary */}
+          <Card className="bg-gradient-to-r from-green-500/10 to-blue-500/10">
+            <CardContent className="py-6">
+              <div className="flex justify-center gap-8">
+                <div className="text-center">
+                  <p className="text-3xl font-bold text-green-500">{result.youCanOffer.length}</p>
+                  <p className="text-sm text-muted-foreground">You can offer</p>
+                </div>
+                <div className="flex items-center">
                   <svg
                     className="w-8 h-8 text-muted-foreground"
                     fill="none"
@@ -300,26 +324,40 @@ export function TradeFinder({
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
                     />
                   </svg>
                 </div>
-                <p className="text-muted-foreground">
-                  No trade opportunities found. You don't have any records that{" "}
-                  {result.friendUsername} wants.
-                </p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Their wantlist may be private or empty.
-                </p>
+                <div className="text-center">
+                  <p className="text-3xl font-bold text-blue-500">{result.theyCanOffer.length}</p>
+                  <p className="text-sm text-muted-foreground">They can offer</p>
+                </div>
               </div>
-            ) : (
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground mb-4">
-                  You have {result.youCanOffer.length} record
-                  {result.youCanOffer.length !== 1 ? "s" : ""} that{" "}
-                  {result.friendUsername} is looking for:
+            </CardContent>
+          </Card>
+
+          {/* You can offer */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <span className="text-green-500">You can offer</span>
+                {result.youCanOffer.length > 0 && (
+                  <Badge variant="default" className="bg-green-500">
+                    {result.youCanOffer.length}
+                  </Badge>
+                )}
+              </CardTitle>
+              <CardDescription>
+                Records you have that {result.friendUsername} wants
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {result.youCanOffer.length === 0 ? (
+                <p className="text-muted-foreground text-center py-4">
+                  You don't have any records that {result.friendUsername} wants.
                 </p>
-                <div className="grid sm:grid-cols-2 gap-3 max-h-[500px] overflow-y-auto">
+              ) : (
+                <div className="grid sm:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto">
                   {result.youCanOffer.map((opportunity) => (
                     <TradeCard
                       key={opportunity.release.instance_id}
@@ -327,10 +365,43 @@ export function TradeFinder({
                     />
                   ))}
                 </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* They can offer */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <span className="text-blue-500">{result.friendUsername} can offer</span>
+                {result.theyCanOffer.length > 0 && (
+                  <Badge variant="default" className="bg-blue-500">
+                    {result.theyCanOffer.length}
+                  </Badge>
+                )}
+              </CardTitle>
+              <CardDescription>
+                Records they have that you want
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {result.theyCanOffer.length === 0 ? (
+                <p className="text-muted-foreground text-center py-4">
+                  {result.friendUsername} doesn't have any records from your wantlist.
+                </p>
+              ) : (
+                <div className="grid sm:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto">
+                  {result.theyCanOffer.map((opportunity) => (
+                    <TradeCard
+                      key={opportunity.release.instance_id}
+                      opportunity={opportunity}
+                    />
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       )}
     </div>
   );
