@@ -5,6 +5,21 @@ All notable changes to DeepCogs will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-01-07
+
+### Added
+- **OG vs Repress Detection**: Identify original pressings vs represses via format keywords
+
+### Changed
+- **Oddities moved to DNA**: Test Pressings, Promos, and Limited Editions now display in DNA tab
+- **Simplified navigation**: Reduced from 4 tabs to 3 (DNA, Compare, Discover)
+- Renamed section to "Oddities & Pressings" with 5-column layout
+
+### Removed
+- **Deep Cuts tab**: Removed as a separate tab, functionality merged into DNA
+
+---
+
 ## [0.3.1] - 2026-01-07
 
 ### Changed
@@ -87,6 +102,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 0.4.0 | 2026-01-07 | OG vs Repress detection, merged Oddities into DNA, removed Deep Cuts tab |
 | 0.3.1 | 2026-01-07 | Bidirectional Trade Finder, removed Country Distribution & Progressive Loading |
 | 0.3.0 | 2026-01-06 | Wantlist integration, deep cuts, shareable cards, trade finder |
 | 0.2.1 | 2026-01-06 | Fix recommendations timeout on Vercel |
