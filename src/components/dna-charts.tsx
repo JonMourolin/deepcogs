@@ -39,6 +39,13 @@ const COLORS = [
   "oklch(0.75 0.10 30)",  // Warm tan
 ];
 
+// Keywords for oddities detection
+const ODDITY_PATTERNS = {
+  testPressing: /test\s*press/i,
+  promo: /promo|white\s*label/i,
+  limited: /limited|numbered/i,
+};
+
 function analyzeCollection(releases: DiscogsRelease[]) {
   const genres: Record<string, number> = {};
   const styles: Record<string, number> = {};
@@ -48,8 +55,22 @@ function analyzeCollection(releases: DiscogsRelease[]) {
   const countries: Record<string, number> = {};
   const years: Record<number, number> = {};
 
+  // Oddities counters
+  let testPressings = 0;
+  let promos = 0;
+  let limited = 0;
+
   releases.forEach((release) => {
     const info = release.basic_information;
+
+    // Check format descriptions for oddities
+    const formatDescriptions = info.formats
+      ?.flatMap((f) => [f.name, ...(f.descriptions || [])])
+      .join(" ") || "";
+
+    if (ODDITY_PATTERNS.testPressing.test(formatDescriptions)) testPressings++;
+    if (ODDITY_PATTERNS.promo.test(formatDescriptions)) promos++;
+    if (ODDITY_PATTERNS.limited.test(formatDescriptions)) limited++;
 
     // Genres
     info.genres?.forEach((genre) => {
@@ -107,6 +128,7 @@ function analyzeCollection(releases: DiscogsRelease[]) {
       min: Math.min(...Object.keys(years).map(Number).filter(y => y > 1900)),
       max: Math.max(...Object.keys(years).map(Number)),
     },
+    oddities: { testPressings, promos, limited },
   };
 }
 
@@ -274,6 +296,38 @@ export function DNACharts({ releases }: DNAChartsProps) {
                   />
                 </div>
               ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Oddities */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Oddities</CardTitle>
+            <CardDescription>
+              Test pressings, promos, and limited editions
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="text-center p-3 rounded-lg bg-purple-500/10">
+                <p className="text-2xl font-bold text-purple-500">
+                  {analysis.oddities.testPressings}
+                </p>
+                <p className="text-xs text-muted-foreground">Test Pressings</p>
+              </div>
+              <div className="text-center p-3 rounded-lg bg-blue-500/10">
+                <p className="text-2xl font-bold text-blue-500">
+                  {analysis.oddities.promos}
+                </p>
+                <p className="text-xs text-muted-foreground">Promos</p>
+              </div>
+              <div className="text-center p-3 rounded-lg bg-amber-500/10">
+                <p className="text-2xl font-bold text-amber-500">
+                  {analysis.oddities.limited}
+                </p>
+                <p className="text-xs text-muted-foreground">Limited Editions</p>
+              </div>
             </div>
           </CardContent>
         </Card>
