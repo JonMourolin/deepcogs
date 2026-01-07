@@ -5,6 +5,16 @@ All notable changes to DeepCogs will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-01-07
+
+### Changed
+- **Landing Page Redesign**: New split-screen layout with login on left, value proposition on right
+- Added Instrument Serif font for elegant headlines
+- OAuth button now links directly to Discogs (removes intermediate login dialog)
+- Animated vinyl record with DNA helix overlay on landing page
+
+---
+
 ## [0.4.0] - 2026-01-07
 
 ### Added
@@ -102,6 +112,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 0.5.0 | 2026-01-07 | Landing page redesign with split-screen layout |
 | 0.4.0 | 2026-01-07 | OG vs Repress detection, merged Oddities into DNA, removed Deep Cuts tab |
 | 0.3.1 | 2026-01-07 | Bidirectional Trade Finder, removed Country Distribution & Progressive Loading |
 | 0.3.0 | 2026-01-06 | Wantlist integration, deep cuts, shareable cards, trade finder |
