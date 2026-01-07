@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Progress } from "@/components/ui/progress";
 import { VinylRecord } from "@/components/vinyl-record";
 import { DNACharts } from "@/components/dna-charts";
 import { CollectionCompare } from "@/components/collection-compare";
@@ -29,10 +28,7 @@ interface CollectionData {
 export function DashboardClient({ username }: DashboardClientProps) {
   const [collection, setCollection] = useState<CollectionData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [hasMore, setHasMore] = useState(false);
 
   const fetchPage = useCallback(async (page: number, existingReleases: DiscogsRelease[] = []) => {
     const response = await fetch(`/api/collection?username=${username}&page=${page}`);
@@ -48,31 +44,26 @@ export function DashboardClient({ username }: DashboardClientProps) {
     };
   }, [username]);
 
-  const loadMore = useCallback(async () => {
-    if (loadingMore || !hasMore || !collection) return;
-
-    setLoadingMore(true);
-    try {
-      const nextPage = currentPage + 1;
-      const result = await fetchPage(nextPage, collection.releases);
-      setCollection({ releases: result.releases, total: result.total });
-      setCurrentPage(result.page);
-      setHasMore(result.hasMore);
-    } catch (err) {
-      console.error("Failed to load more:", err);
-    } finally {
-      setLoadingMore(false);
-    }
-  }, [loadingMore, hasMore, collection, currentPage, fetchPage]);
 
   useEffect(() => {
     async function fetchCollection() {
       try {
         setLoading(true);
-        const result = await fetchPage(1);
-        setCollection({ releases: result.releases, total: result.total });
-        setCurrentPage(result.page);
-        setHasMore(result.hasMore);
+        let allReleases: DiscogsRelease[] = [];
+        let currentPageNum = 1;
+        let hasMore = true;
+        let total = 0;
+
+        // Fetch all pages until we have the complete collection
+        while (hasMore) {
+          const result = await fetchPage(currentPageNum, allReleases);
+          allReleases = result.releases;
+          total = result.total;
+          hasMore = result.hasMore;
+          currentPageNum = result.page + 1;
+        }
+
+        setCollection({ releases: allReleases, total });
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load collection");
       } finally {
@@ -135,59 +126,12 @@ export function DashboardClient({ username }: DashboardClientProps) {
               {loading
                 ? "Loading your collection..."
                 : collection
-                ? `${collection.releases.length} of ${collection.total} releases loaded`
+                ? `${collection.total} releases in your collection`
                 : "Your collection DNA awaits"}
             </p>
-            {/* Progress bar for large collections */}
-            {collection && hasMore && !loading && (
-              <div className="mt-3 max-w-sm space-y-2">
-                <div className="flex items-center gap-2">
-                  <Progress
-                    value={(collection.releases.length / collection.total) * 100}
-                    className="h-2 flex-1"
-                  />
-                  <span className="text-xs text-muted-foreground">
-                    {Math.round((collection.releases.length / collection.total) * 100)}%
-                  </span>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={loadMore}
-                  disabled={loadingMore}
-                >
-                  {loadingMore ? (
-                    <>
-                      <svg
-                        className="animate-spin -ml-1 mr-2 h-3 w-3"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                        />
-                      </svg>
-                      Loading...
-                    </>
-                  ) : (
-                    `Load more (${collection.total - collection.releases.length} remaining)`
-                  )}
-                </Button>
-              </div>
-            )}
           </div>
           <div className="hidden md:block">
-            <VinylRecord size={80} spinning={loading || loadingMore} />
+            <VinylRecord size={80} spinning={loading} />
           </div>
         </div>
 
