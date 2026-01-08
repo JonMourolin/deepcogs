@@ -5,6 +5,22 @@ All notable changes to DeepCogs will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.2] - 2026-01-08
+
+### Added
+- **User Profile Caching**: Avatar and collection count stored at login
+- **Loading Progress**: Shows "Loading 45/234..." during collection fetch
+- **Recommendations Caching**: localStorage with 24h TTL, refresh button
+- **Collection Caching**: localStorage with 24h TTL for instant page loads
+
+### Changed
+- Style Breakdown now shows 15 sub-genres (was 10)
+
+### Fixed
+- Avatar field name from Discogs API
+
+---
+
 ## [0.6.1] - 2026-01-08
 
 ### Added
@@ -148,6 +164,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 0.6.2 | 2026-01-08 | Caching (profile, collection, recommendations), loading progress |
 | 0.6.1 | 2026-01-08 | Smart recommendations, style-based compatibility, removed DNA card |
 | 0.6.0 | 2026-01-08 | Admin-style dashboard, elegant landing page |
 | 0.5.0 | 2026-01-07 | Landing page redesign with split-screen layout |
