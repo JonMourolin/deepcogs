@@ -112,7 +112,7 @@ function analyzeCollection(releases: DiscogsRelease[]) {
 
   return {
     genres: sortByCount(genres, 8),
-    styles: sortByCount(styles, 10),
+    styles: sortByCount(styles, 15),
     decades: sortDecades(decades),
     labels: sortByCount(labels, 10),
     formats: sortByCount(formats, 5),
