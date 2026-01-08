@@ -162,11 +162,11 @@ export function DNACard({ username, releases, isLoading }: DNACardProps) {
   }
 
   return (
-    <Card>
+    <Card className="bg-white border-gray-200">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-gray-900">
           <svg
-            className="w-5 h-5 text-primary"
+            className="w-5 h-5 text-amber-600"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -180,13 +180,13 @@ export function DNACard({ username, releases, isLoading }: DNACardProps) {
           </svg>
           Shareable DNA Card
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-gray-500">
           Download or share your collection DNA as an image
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Preview card */}
-        <div className="overflow-hidden rounded-lg border border-border">
+        <div className="overflow-hidden rounded-lg border border-gray-200">
           <div
             ref={cardRef}
             className="p-6 space-y-4"
@@ -293,7 +293,7 @@ export function DNACard({ username, releases, isLoading }: DNACardProps) {
           <Button
             onClick={handleDownload}
             disabled={downloading}
-            className="flex-1"
+            className="flex-1 bg-gray-900 text-white hover:bg-gray-800"
           >
             {downloading ? (
               <>
@@ -341,6 +341,7 @@ export function DNACard({ username, releases, isLoading }: DNACardProps) {
             onClick={handleShare}
             disabled={downloading}
             variant="outline"
+            className="border-gray-200 text-gray-700 hover:bg-gray-100"
           >
             <svg
               className="w-4 h-4 mr-2"

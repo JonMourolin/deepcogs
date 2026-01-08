@@ -51,7 +51,7 @@ function ReleaseCard({
   onAddToWantlist: (releaseId: number) => void;
 }) {
   return (
-    <div className="flex gap-3 p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-all group">
+    <div className="flex gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-all group border border-gray-100">
       <a
         href={`https://www.discogs.com/master/${release.masterId}`}
         target="_blank"
@@ -65,9 +65,9 @@ function ReleaseCard({
             className="w-14 h-14 rounded object-cover flex-shrink-0"
           />
         ) : (
-          <div className="w-14 h-14 rounded bg-muted flex items-center justify-center flex-shrink-0">
+          <div className="w-14 h-14 rounded bg-gray-100 flex items-center justify-center flex-shrink-0">
             <svg
-              className="w-6 h-6 text-muted-foreground"
+              className="w-6 h-6 text-gray-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -78,18 +78,18 @@ function ReleaseCard({
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <p className="font-medium truncate group-hover:text-primary transition-colors">
+          <p className="font-medium text-gray-900 truncate group-hover:text-amber-600 transition-colors">
             {release.title}
           </p>
-          <p className="text-sm text-muted-foreground truncate">
+          <p className="text-sm text-gray-500 truncate">
             {release.artist} {release.year ? `• ${release.year}` : ""}
           </p>
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-gray-500">
               {release.community.have.toLocaleString()} have
             </span>
-            <span className="text-xs text-muted-foreground">•</span>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-gray-500">•</span>
+            <span className="text-xs text-gray-500">
               {release.community.want.toLocaleString()} want
             </span>
           </div>
@@ -106,12 +106,12 @@ function ReleaseCard({
           disabled={wantlistStatus === "loading" || wantlistStatus === "added"}
           className={`p-2 rounded-md transition-all ${
             wantlistStatus === "added"
-              ? "bg-green-500/20 text-green-500 cursor-default"
+              ? "bg-green-100 text-green-600 cursor-default"
               : wantlistStatus === "loading"
-              ? "bg-muted text-muted-foreground cursor-wait"
+              ? "bg-gray-100 text-gray-400 cursor-wait"
               : wantlistStatus === "error"
-              ? "bg-destructive/20 text-destructive hover:bg-destructive/30"
-              : "bg-muted/50 text-muted-foreground hover:bg-primary/20 hover:text-primary"
+              ? "bg-red-100 text-red-600 hover:bg-red-200"
+              : "bg-gray-100 text-gray-500 hover:bg-amber-100 hover:text-amber-600"
           }`}
           title={
             wantlistStatus === "added"
@@ -177,7 +177,7 @@ function ReleaseCard({
           href={`https://www.discogs.com/master/${release.masterId}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="p-2 rounded-md bg-muted/50 text-muted-foreground hover:bg-primary/20 hover:text-primary transition-all"
+          className="p-2 rounded-md bg-gray-100 text-gray-500 hover:bg-amber-100 hover:text-amber-600 transition-all"
           title="View on Discogs"
         >
           <svg
@@ -282,10 +282,10 @@ export function Recommendations({ releases, isLoading }: RecommendationsProps) {
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className="bg-white border-gray-200">
         <CardHeader>
-          <CardTitle>Smart Recommendations</CardTitle>
-          <CardDescription>Loading your collection first...</CardDescription>
+          <CardTitle className="text-gray-900">Smart Recommendations</CardTitle>
+          <CardDescription className="text-gray-500">Loading your collection first...</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -300,18 +300,18 @@ export function Recommendations({ releases, isLoading }: RecommendationsProps) {
 
   if (releases.length === 0) {
     return (
-      <Card>
+      <Card className="bg-white border-gray-200">
         <CardHeader>
-          <CardTitle>Smart Recommendations</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-gray-900">Smart Recommendations</CardTitle>
+          <CardDescription className="text-gray-500">
             Add some records to your Discogs collection to get personalized
             recommendations
           </CardDescription>
         </CardHeader>
         <CardContent className="py-12 text-center">
-          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
             <svg
-              className="w-8 h-8 text-muted-foreground"
+              className="w-8 h-8 text-gray-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -324,7 +324,7 @@ export function Recommendations({ releases, isLoading }: RecommendationsProps) {
               />
             </svg>
           </div>
-          <p className="text-muted-foreground">No collection data available</p>
+          <p className="text-gray-500">No collection data available</p>
         </CardContent>
       </Card>
     );
@@ -333,12 +333,12 @@ export function Recommendations({ releases, isLoading }: RecommendationsProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <Card>
+      <Card className="bg-white border-gray-200">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Smart Recommendations</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-gray-900">Smart Recommendations</CardTitle>
+              <CardDescription className="text-gray-500">
                 Based on your collection DNA, here are releases you might enjoy
               </CardDescription>
             </div>
@@ -347,6 +347,7 @@ export function Recommendations({ releases, isLoading }: RecommendationsProps) {
               size="sm"
               onClick={fetchRecommendations}
               disabled={loading}
+              className="border-gray-200 text-gray-700 hover:bg-gray-100"
             >
               {loading ? (
                 <>
@@ -395,9 +396,9 @@ export function Recommendations({ releases, isLoading }: RecommendationsProps) {
       </Card>
 
       {error && (
-        <Card className="border-destructive/50 bg-destructive/10">
+        <Card className="border-red-200 bg-red-50">
           <CardContent className="py-4">
-            <p className="text-destructive">{error}</p>
+            <p className="text-red-600">{error}</p>
           </CardContent>
         </Card>
       )}
@@ -405,7 +406,7 @@ export function Recommendations({ releases, isLoading }: RecommendationsProps) {
       {loading && !recommendations && (
         <div className="grid md:grid-cols-2 gap-6">
           {[...Array(4)].map((_, i) => (
-            <Card key={i}>
+            <Card key={i} className="bg-white border-gray-200">
               <CardHeader>
                 <Skeleton className="h-5 w-32" />
                 <Skeleton className="h-4 w-48" />
@@ -427,11 +428,11 @@ export function Recommendations({ releases, isLoading }: RecommendationsProps) {
           {/* Gaps indicator */}
           {recommendations.gaps.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm text-gray-500">
                 Genres to explore:
               </span>
               {recommendations.gaps.map((gap) => (
-                <Badge key={gap} variant="secondary">
+                <Badge key={gap} variant="secondary" className="bg-gray-100 text-gray-700">
                   {gap}
                 </Badge>
               ))}
@@ -441,20 +442,20 @@ export function Recommendations({ releases, isLoading }: RecommendationsProps) {
           {/* Recommendation cards */}
           <div className="grid md:grid-cols-2 gap-6">
             {recommendations.recommendations.map((rec) => (
-              <Card key={rec.genre}>
+              <Card key={rec.genre} className="bg-white border-gray-200">
                 <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
+                  <CardTitle className="text-lg text-gray-900 flex items-center gap-2">
                     {rec.genre}
                     {recommendations.gaps.includes(rec.genre) && (
                       <Badge
                         variant="outline"
-                        className="text-xs font-normal"
+                        className="text-xs font-normal border-amber-200 text-amber-600"
                       >
                         New territory
                       </Badge>
                     )}
                   </CardTitle>
-                  <CardDescription>{rec.reason}</CardDescription>
+                  <CardDescription className="text-gray-500">{rec.reason}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
@@ -475,9 +476,9 @@ export function Recommendations({ releases, isLoading }: RecommendationsProps) {
       )}
 
       {recommendations && recommendations.recommendations.length === 0 && (
-        <Card>
+        <Card className="bg-white border-gray-200">
           <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">
+            <p className="text-gray-500">
               No recommendations available at the moment. Try refreshing!
             </p>
           </CardContent>

@@ -19,7 +19,6 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from "recharts";
 import type { DiscogsRelease } from "@/lib/discogs";
 
@@ -27,16 +26,16 @@ interface DNAChartsProps {
   releases: DiscogsRelease[];
 }
 
-// Warm vinyl-inspired color palette
+// Light theme color palette
 const COLORS = [
-  "oklch(0.72 0.18 45)",  // Bright orange
-  "oklch(0.65 0.14 180)", // Teal
-  "oklch(0.80 0.16 85)",  // Gold
-  "oklch(0.60 0.18 15)",  // Coral red
-  "oklch(0.68 0.12 250)", // Periwinkle
-  "oklch(0.55 0.15 320)", // Purple
-  "oklch(0.70 0.12 140)", // Green
-  "oklch(0.75 0.10 30)",  // Warm tan
+  "#E67E22", // Orange
+  "#3498DB", // Blue
+  "#2ECC71", // Green
+  "#E74C3C", // Red
+  "#9B59B6", // Purple
+  "#1ABC9C", // Teal
+  "#F39C12", // Yellow
+  "#34495E", // Dark gray
 ];
 
 // Keywords for oddities detection
@@ -55,10 +54,8 @@ function analyzeCollection(releases: DiscogsRelease[]) {
   const decades: Record<string, number> = {};
   const labels: Record<string, number> = {};
   const formats: Record<string, number> = {};
-  const countries: Record<string, number> = {};
   const years: Record<number, number> = {};
 
-  // Oddities counters
   let testPressings = 0;
   let promos = 0;
   let limited = 0;
@@ -67,7 +64,6 @@ function analyzeCollection(releases: DiscogsRelease[]) {
   releases.forEach((release) => {
     const info = release.basic_information;
 
-    // Check format descriptions for oddities
     const formatDescriptions = info.formats
       ?.flatMap((f) => [f.name, ...(f.descriptions || [])])
       .join(" ") || "";
@@ -77,17 +73,14 @@ function analyzeCollection(releases: DiscogsRelease[]) {
     if (ODDITY_PATTERNS.limited.test(formatDescriptions)) limited++;
     if (REPRESS_PATTERN.test(formatDescriptions)) represses++;
 
-    // Genres
     info.genres?.forEach((genre) => {
       genres[genre] = (genres[genre] || 0) + 1;
     });
 
-    // Styles
     info.styles?.forEach((style) => {
       styles[style] = (styles[style] || 0) + 1;
     });
 
-    // Decade
     if (info.year && info.year > 1900) {
       const decade = Math.floor(info.year / 10) * 10;
       const decadeLabel = `${decade}s`;
@@ -95,20 +88,17 @@ function analyzeCollection(releases: DiscogsRelease[]) {
       years[info.year] = (years[info.year] || 0) + 1;
     }
 
-    // Labels
     info.labels?.forEach((label) => {
       if (label.name && label.name !== "Not On Label") {
         labels[label.name] = (labels[label.name] || 0) + 1;
       }
     });
 
-    // Formats
     info.formats?.forEach((format) => {
       formats[format.name] = (formats[format.name] || 0) + 1;
     });
   });
 
-  // Sort and limit results
   const sortByCount = (obj: Record<string, number>, limit = 10) =>
     Object.entries(obj)
       .sort(([, a], [, b]) => b - a)
@@ -143,9 +133,9 @@ export function DNACharts({ releases }: DNAChartsProps) {
 
   if (releases.length === 0) {
     return (
-      <Card>
+      <Card className="bg-white border-gray-200">
         <CardContent className="py-12 text-center">
-          <p className="text-muted-foreground">
+          <p className="text-gray-500">
             No releases found in your collection to analyze.
           </p>
         </CardContent>
@@ -154,50 +144,14 @@ export function DNACharts({ releases }: DNAChartsProps) {
   }
 
   return (
-    <div className="space-y-8">
-      {/* Summary Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-3xl font-bold text-primary">
-              {analysis.totalReleases}
-            </div>
-            <p className="text-sm text-muted-foreground">Total Releases</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-3xl font-bold text-primary">
-              {analysis.uniqueGenres}
-            </div>
-            <p className="text-sm text-muted-foreground">Genres</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-3xl font-bold text-primary">
-              {analysis.uniqueLabels}
-            </div>
-            <p className="text-sm text-muted-foreground">Labels</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-3xl font-bold text-primary">
-              {analysis.yearRange.min}-{analysis.yearRange.max}
-            </div>
-            <p className="text-sm text-muted-foreground">Year Range</p>
-          </CardContent>
-        </Card>
-      </div>
-
+    <div className="space-y-6">
       {/* Main Charts */}
       <div className="grid md:grid-cols-2 gap-6">
         {/* Genre Distribution */}
-        <Card>
+        <Card className="bg-white border-gray-200">
           <CardHeader>
-            <CardTitle>Genre DNA</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-gray-900">Genre DNA</CardTitle>
+            <CardDescription className="text-gray-500">
               Your collection&apos;s genre breakdown
             </CardDescription>
           </CardHeader>
@@ -227,9 +181,10 @@ export function DNACharts({ releases }: DNAChartsProps) {
                   </Pie>
                   <Tooltip
                     contentStyle={{
-                      background: "oklch(0.16 0.015 30)",
-                      border: "1px solid oklch(0.25 0.015 30)",
+                      background: "#fff",
+                      border: "1px solid #e5e7eb",
                       borderRadius: "8px",
+                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                     }}
                   />
                 </PieChart>
@@ -239,32 +194,34 @@ export function DNACharts({ releases }: DNAChartsProps) {
         </Card>
 
         {/* Decade Distribution */}
-        <Card>
+        <Card className="bg-white border-gray-200">
           <CardHeader>
-            <CardTitle>Era Distribution</CardTitle>
-            <CardDescription>When your music was released</CardDescription>
+            <CardTitle className="text-gray-900">Era Distribution</CardTitle>
+            <CardDescription className="text-gray-500">When your music was released</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={analysis.decades} layout="vertical">
-                  <XAxis type="number" stroke="oklch(0.6 0.02 85)" />
+                  <XAxis type="number" stroke="#9ca3af" fontSize={12} />
                   <YAxis
                     type="category"
                     dataKey="name"
-                    stroke="oklch(0.6 0.02 85)"
+                    stroke="#9ca3af"
                     width={60}
+                    fontSize={12}
                   />
                   <Tooltip
                     contentStyle={{
-                      background: "oklch(0.16 0.015 30)",
-                      border: "1px solid oklch(0.25 0.015 30)",
+                      background: "#fff",
+                      border: "1px solid #e5e7eb",
                       borderRadius: "8px",
+                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                     }}
                   />
                   <Bar
                     dataKey="value"
-                    fill="oklch(0.75 0.15 55)"
+                    fill="#E67E22"
                     radius={[0, 4, 4, 0]}
                   />
                 </BarChart>
@@ -274,32 +231,32 @@ export function DNACharts({ releases }: DNAChartsProps) {
         </Card>
 
         {/* Top Labels */}
-        <Card>
+        <Card className="bg-white border-gray-200">
           <CardHeader>
-            <CardTitle>Top Labels</CardTitle>
-            <CardDescription>Your most collected labels</CardDescription>
+            <CardTitle className="text-gray-900">Top Labels</CardTitle>
+            <CardDescription className="text-gray-500">Your most collected labels</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {analysis.labels.slice(0, 8).map((label, index) => (
                 <div key={label.name} className="space-y-1">
                   <div className="flex justify-between text-sm">
-                    <span className="font-medium truncate max-w-[200px]">
+                    <span className="font-medium text-gray-900 truncate max-w-[200px]">
                       {label.name}
                     </span>
-                    <span className="text-muted-foreground">
+                    <span className="text-gray-500">
                       {label.value} releases
                     </span>
                   </div>
-                  <Progress
-                    value={(label.value / analysis.labels[0].value) * 100}
-                    className="h-2"
-                    style={
-                      {
-                        "--progress-foreground": COLORS[index % COLORS.length],
-                      } as React.CSSProperties
-                    }
-                  />
+                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{
+                        width: `${(label.value / analysis.labels[0].value) * 100}%`,
+                        backgroundColor: COLORS[index % COLORS.length],
+                      }}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
@@ -307,77 +264,72 @@ export function DNACharts({ releases }: DNAChartsProps) {
         </Card>
 
         {/* Oddities & Pressings */}
-        <Card>
+        <Card className="bg-white border-gray-200">
           <CardHeader>
-            <CardTitle>Oddities & Pressings</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-gray-900">Oddities & Pressings</CardTitle>
+            <CardDescription className="text-gray-500">
               Rare formats and pressing breakdown
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-5 gap-3">
-              <div className="text-center p-3 rounded-lg bg-purple-500/10">
-                <p className="text-2xl font-bold text-purple-500">
+              <div className="text-center p-3 rounded-lg bg-purple-50 border border-purple-100">
+                <p className="text-2xl font-bold text-purple-600">
                   {analysis.oddities.testPressings}
                 </p>
-                <p className="text-xs text-muted-foreground">Test Pressings</p>
+                <p className="text-xs text-gray-500">Test Pressings</p>
               </div>
-              <div className="text-center p-3 rounded-lg bg-blue-500/10">
-                <p className="text-2xl font-bold text-blue-500">
+              <div className="text-center p-3 rounded-lg bg-blue-50 border border-blue-100">
+                <p className="text-2xl font-bold text-blue-600">
                   {analysis.oddities.promos}
                 </p>
-                <p className="text-xs text-muted-foreground">Promos</p>
+                <p className="text-xs text-gray-500">Promos</p>
               </div>
-              <div className="text-center p-3 rounded-lg bg-amber-500/10">
-                <p className="text-2xl font-bold text-amber-500">
+              <div className="text-center p-3 rounded-lg bg-amber-50 border border-amber-100">
+                <p className="text-2xl font-bold text-amber-600">
                   {analysis.oddities.limited}
                 </p>
-                <p className="text-xs text-muted-foreground">Limited</p>
+                <p className="text-xs text-gray-500">Limited</p>
               </div>
-              <div className="text-center p-3 rounded-lg bg-green-500/10">
-                <p className="text-2xl font-bold text-green-500">
+              <div className="text-center p-3 rounded-lg bg-green-50 border border-green-100">
+                <p className="text-2xl font-bold text-green-600">
                   {analysis.totalReleases - analysis.represses}
                 </p>
-                <p className="text-xs text-muted-foreground">Originals</p>
+                <p className="text-xs text-gray-500">Originals</p>
               </div>
-              <div className="text-center p-3 rounded-lg bg-red-500/10">
-                <p className="text-2xl font-bold text-red-500">
+              <div className="text-center p-3 rounded-lg bg-red-50 border border-red-100">
+                <p className="text-2xl font-bold text-red-600">
                   {analysis.represses}
                 </p>
-                <p className="text-xs text-muted-foreground">Represses</p>
+                <p className="text-xs text-gray-500">Represses</p>
               </div>
             </div>
           </CardContent>
         </Card>
-
       </div>
 
       {/* Top Styles */}
-      <Card>
+      <Card className="bg-white border-gray-200">
         <CardHeader>
-          <CardTitle>Style Breakdown</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-gray-900">Style Breakdown</CardTitle>
+          <CardDescription className="text-gray-500">
             More specific sub-genres in your collection
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
             {analysis.styles.map((style, index) => (
-              <div
+              <span
                 key={style.name}
-                className="px-3 py-1.5 rounded-full text-sm font-medium"
+                className="px-3 py-1.5 rounded-full text-sm font-medium border"
                 style={{
-                  background: `color-mix(in oklch, ${
-                    COLORS[index % COLORS.length]
-                  } 20%, transparent)`,
+                  backgroundColor: `${COLORS[index % COLORS.length]}15`,
                   color: COLORS[index % COLORS.length],
-                  border: `1px solid color-mix(in oklch, ${
-                    COLORS[index % COLORS.length]
-                  } 40%, transparent)`,
+                  borderColor: `${COLORS[index % COLORS.length]}30`,
                 }}
               >
                 {style.name} ({style.value})
-              </div>
+              </span>
             ))}
           </div>
         </CardContent>
