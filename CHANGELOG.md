@@ -5,6 +5,14 @@ All notable changes to DeepCogs will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.3] - 2026-01-08
+
+### Documentation
+- Updated CLAUDE.md with new API routes, components, and improved git workflow
+- Documented recommendation genre mismatch issue in ROADMAP.md with potential solutions
+
+---
+
 ## [0.6.2] - 2026-01-08
 
 ### Added
@@ -164,6 +172,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 0.6.3 | 2026-01-08 | Documentation updates (CLAUDE.md, ROADMAP.md) |
 | 0.6.2 | 2026-01-08 | Caching (profile, collection, recommendations), loading progress |
 | 0.6.1 | 2026-01-08 | Smart recommendations, style-based compatibility, removed DNA card |
 | 0.6.0 | 2026-01-08 | Admin-style dashboard, elegant landing page |
