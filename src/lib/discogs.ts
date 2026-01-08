@@ -332,11 +332,22 @@ export function createDiscogsClient(
     },
 
     /**
-     * Search the database
+     * Search the database with optional filters
      */
-    async search(query: string, type?: string): Promise<unknown> {
+    async search(
+      query: string,
+      type?: string,
+      options?: {
+        format?: string;
+        sort?: "year" | "title" | "have" | "want";
+        sort_order?: "asc" | "desc";
+      }
+    ): Promise<unknown> {
       const params = new URLSearchParams({ q: query });
       if (type) params.append("type", type);
+      if (options?.format) params.append("format", options.format);
+      if (options?.sort) params.append("sort", options.sort);
+      if (options?.sort_order) params.append("sort_order", options.sort_order);
       return makeRequest(`/database/search?${params.toString()}`);
     },
 
