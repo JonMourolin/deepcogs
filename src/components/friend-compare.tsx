@@ -175,8 +175,7 @@ export function FriendCompare({
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ComparisonResult | null>(null);
-  const [activeCompareTab, setActiveCompareTab] = useState<"overlap" | "onlyMe" | "onlyFriend">("overlap");
-
+  
   const handleSearch = async () => {
     if (!friendUsername.trim()) return;
     if (friendUsername.toLowerCase() === myUsername.toLowerCase()) {
@@ -596,94 +595,27 @@ export function FriendCompare({
             </div>
           )}
 
-          {/* Collection Details */}
-          <div className="space-y-4">
-            <div className="flex gap-2 p-1 bg-gray-100 rounded-lg w-fit">
-              <button
-                onClick={() => setActiveCompareTab("overlap")}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  activeCompareTab === "overlap"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                In Common ({result.overlap.length})
-              </button>
-              <button
-                onClick={() => setActiveCompareTab("onlyMe")}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  activeCompareTab === "onlyMe"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                Only You ({result.onlyMe.length})
-              </button>
-              <button
-                onClick={() => setActiveCompareTab("onlyFriend")}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  activeCompareTab === "onlyFriend"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                Only Them ({result.onlyFriend.length})
-              </button>
-            </div>
-
-            {activeCompareTab === "overlap" && (
-              <Card className="bg-white border-gray-200">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-gray-900 text-base">Albums You Both Own</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {result.overlap.length === 0 ? (
-                    <p className="text-gray-500 text-center py-8">
-                      No overlapping albums found
-                    </p>
-                  ) : (
-                    <div className="grid sm:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto">
-                      {result.overlap.slice(0, 50).map((release) => (
-                        <ReleaseCard key={release.instance_id} release={release} />
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {activeCompareTab === "onlyMe" && (
-              <Card className="bg-white border-gray-200">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-gray-900 text-base">Your Unique Albums</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid sm:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto">
-                    {result.onlyMe.slice(0, 50).map((release) => (
-                      <ReleaseCard key={release.instance_id} release={release} />
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {activeCompareTab === "onlyFriend" && (
-              <Card className="bg-white border-gray-200">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-gray-900 text-base">
-                    {result.friendUsername}&apos;s Unique Albums
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid sm:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto">
-                    {result.onlyFriend.slice(0, 50).map((release) => (
-                      <ReleaseCard key={release.instance_id} release={release} />
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+          {/* Albums In Common */}
+          <Card className="bg-white border-gray-200">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-gray-900 text-base">
+                Albums In Common ({result.overlap.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {result.overlap.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">
+                  No overlapping albums found
+                </p>
+              ) : (
+                <div className="grid sm:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto">
+                  {result.overlap.slice(0, 50).map((release) => (
+                    <ReleaseCard key={release.instance_id} release={release} />
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>
