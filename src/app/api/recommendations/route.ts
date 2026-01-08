@@ -2,30 +2,28 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createDiscogsClient } from "@/lib/discogs";
 
-// Major genres to consider for recommendations
-const MAJOR_GENRES = [
-  "Electronic",
-  "Rock",
-  "Jazz",
-  "Hip Hop",
-  "Classical",
-  "Folk, World, & Country",
-  "Funk / Soul",
-  "Pop",
-  "Reggae",
-  "Blues",
-  "Latin",
-  "Stage & Screen",
-];
+interface StyleData {
+  name: string;
+  count: number;
+  artists: string[];
+}
 
 interface RecommendationRequest {
-  genres: { name: string; count: number }[];
+  styles: StyleData[];
   ownedMasterIds: number[];
+  ownedArtistNames: string[];
+}
+
+interface SimilarArtist {
+  name: string;
+  match: number;
+  sourceArtist: string;
 }
 
 export async function POST(request: NextRequest) {
   const consumerKey = process.env.DISCOGS_CONSUMER_KEY;
   const consumerSecret = process.env.DISCOGS_CONSUMER_SECRET;
+  const lastfmApiKey = process.env.LASTFM_API_KEY;
 
   if (!consumerKey || !consumerSecret) {
     return NextResponse.json(
@@ -47,31 +45,46 @@ export async function POST(request: NextRequest) {
 
   try {
     const body: RecommendationRequest = await request.json();
-    const { genres, ownedMasterIds } = body;
+    const { styles, ownedMasterIds, ownedArtistNames } = body;
 
-    // Calculate genre gaps - find genres user has less of
-    const totalReleases = genres.reduce((sum, g) => sum + g.count, 0);
-    const genrePercentages = genres.map((g) => ({
-      ...g,
-      percentage: (g.count / totalReleases) * 100,
-    }));
+    const ownedSet = new Set(ownedMasterIds);
+    const ownedArtistsSet = new Set(ownedArtistNames.map((n) => n.toLowerCase()));
 
-    // Find underrepresented major genres (less than 10% of collection)
-    const userGenreNames = new Set(genres.map((g) => g.name));
-    const gaps = MAJOR_GENRES.filter((genre) => {
-      const userGenre = genrePercentages.find((g) => g.name === genre);
-      return !userGenre || userGenre.percentage < 10;
-    }).slice(0, 3); // Top 3 gaps
+    // Get top styles (up to 4)
+    const topStyles = styles.slice(0, 4);
 
-    // Also suggest more of their top genres
-    const topGenres = genrePercentages
-      .filter((g) => MAJOR_GENRES.includes(g.name))
-      .slice(0, 2)
-      .map((g) => g.name);
+    // Collect artists from top styles for Last.fm lookup
+    const artistsForLastfm: string[] = [];
+    topStyles.forEach((style) => {
+      artistsForLastfm.push(...style.artists.slice(0, 2));
+    });
+    const uniqueArtists = [...new Set(artistsForLastfm)].slice(0, 6);
 
-    const genresToSearch = [...new Set([...gaps, ...topGenres])].slice(0, 4);
+    // Fetch similar artists from Last.fm if API key is available
+    let similarArtists: SimilarArtist[] = [];
+    if (lastfmApiKey && uniqueArtists.length > 0) {
+      try {
+        const baseUrl = request.nextUrl.origin;
+        const lastfmResponse = await fetch(`${baseUrl}/api/lastfm/similar`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ artists: uniqueArtists }),
+        });
 
-    // Search Discogs for each genre
+        if (lastfmResponse.ok) {
+          const lastfmData = await lastfmResponse.json();
+          similarArtists = lastfmData.similarArtists || [];
+          // Filter out artists user already owns
+          similarArtists = similarArtists.filter(
+            (a) => !ownedArtistsSet.has(a.name.toLowerCase())
+          );
+        }
+      } catch (err) {
+        console.error("Last.fm fetch failed:", err);
+        // Continue without Last.fm data
+      }
+    }
+
     const client = createDiscogsClient(
       consumerKey,
       consumerSecret,
@@ -79,10 +92,10 @@ export async function POST(request: NextRequest) {
       accessTokenSecret
     );
 
-    const ownedSet = new Set(ownedMasterIds);
     const recommendations: {
-      genre: string;
+      style: string;
       reason: string;
+      basedOn: string[];
       releases: Array<{
         id: number;
         masterId: number;
@@ -93,73 +106,150 @@ export async function POST(request: NextRequest) {
         genre: string[];
         style: string[];
         community: { have: number; want: number };
+        similarTo?: string;
       }>;
     }[] = [];
 
-    // Run searches in parallel for faster response
-    const searchPromises = genresToSearch.map(async (genre) => {
-      const isGap = gaps.includes(genre);
-      const reason = isGap
-        ? `Expand your horizons - you have few ${genre} releases`
-        : `More of what you love - ${genre}`;
+    // Search for releases by similar artists (grouped by style)
+    const styleArtistMap = new Map<string, SimilarArtist[]>();
 
-      try {
-        // Search for popular releases in this genre
-        const searchResult = await client.search(genre, "master");
-        const results = (searchResult as { results?: Array<{
-          id: number;
-          master_id?: number;
-          title: string;
-          year?: string;
-          thumb?: string;
-          genre?: string[];
-          style?: string[];
-          community?: { have: number; want: number };
-        }> }).results || [];
-
-        // Filter and format results
-        const filtered = results
-          .filter((r) => {
-            const masterId = r.master_id || r.id;
-            return masterId && !ownedSet.has(masterId);
-          })
-          .slice(0, 8)
-          .map((r) => {
-            const [artist, ...titleParts] = (r.title || "").split(" - ");
-            return {
-              id: r.id,
-              masterId: r.master_id || r.id,
-              title: titleParts.join(" - ") || r.title || "Unknown",
-              artist: artist || "Unknown Artist",
-              year: parseInt(r.year || "0") || 0,
-              thumb: r.thumb || "",
-              genre: r.genre || [],
-              style: r.style || [],
-              community: r.community || { have: 0, want: 0 },
-            };
-          });
-
-        if (filtered.length > 0) {
-          return {
-            genre,
-            reason,
-            releases: filtered,
-          };
+    // Map similar artists back to styles
+    for (const similar of similarArtists) {
+      // Find which style this artist came from
+      for (const style of topStyles) {
+        if (style.artists.some((a) => a.toLowerCase() === similar.sourceArtist.toLowerCase())) {
+          const existing = styleArtistMap.get(style.name) || [];
+          existing.push(similar);
+          styleArtistMap.set(style.name, existing);
+          break;
         }
-        return null;
-      } catch (err) {
-        console.error(`Search failed for genre ${genre}:`, err);
-        return null;
       }
-    });
+    }
 
-    const results = await Promise.all(searchPromises);
-    recommendations.push(...results.filter((r): r is NonNullable<typeof r> => r !== null));
+    // For each style, search for releases by similar artists
+    for (const style of topStyles) {
+      const styleArtists = styleArtistMap.get(style.name) || [];
+      const basedOnArtists = style.artists.slice(0, 2);
+
+      const reason = styleArtists.length > 0
+        ? `Based on ${basedOnArtists.join(", ")} in your collection`
+        : `More ${style.name} for you`;
+
+      const releases: typeof recommendations[0]["releases"] = [];
+
+      // Search similar artists on Discogs
+      const artistsToSearch = styleArtists.slice(0, 3);
+
+      for (const artist of artistsToSearch) {
+        try {
+          const searchResult = await client.search(
+            `${artist.name}`,
+            "master"
+          );
+          const results = (searchResult as { results?: Array<{
+            id: number;
+            master_id?: number;
+            title: string;
+            year?: string;
+            thumb?: string;
+            genre?: string[];
+            style?: string[];
+            community?: { have: number; want: number };
+          }> }).results || [];
+
+          // Filter and format results
+          const filtered = results
+            .filter((r) => {
+              const masterId = r.master_id || r.id;
+              return masterId && !ownedSet.has(masterId);
+            })
+            .slice(0, 3)
+            .map((r) => {
+              const [artistName, ...titleParts] = (r.title || "").split(" - ");
+              return {
+                id: r.id,
+                masterId: r.master_id || r.id,
+                title: titleParts.join(" - ") || r.title || "Unknown",
+                artist: artistName || "Unknown Artist",
+                year: parseInt(r.year || "0") || 0,
+                thumb: r.thumb || "",
+                genre: r.genre || [],
+                style: r.style || [],
+                community: r.community || { have: 0, want: 0 },
+                similarTo: artist.sourceArtist,
+              };
+            });
+
+          releases.push(...filtered);
+
+          // Small delay to avoid rate limiting
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        } catch (err) {
+          console.error(`Search failed for artist ${artist.name}:`, err);
+        }
+      }
+
+      // If no Last.fm results, fall back to style search
+      if (releases.length === 0) {
+        try {
+          const searchResult = await client.search(style.name, "master");
+          const results = (searchResult as { results?: Array<{
+            id: number;
+            master_id?: number;
+            title: string;
+            year?: string;
+            thumb?: string;
+            genre?: string[];
+            style?: string[];
+            community?: { have: number; want: number };
+          }> }).results || [];
+
+          const filtered = results
+            .filter((r) => {
+              const masterId = r.master_id || r.id;
+              return masterId && !ownedSet.has(masterId);
+            })
+            .slice(0, 6)
+            .map((r) => {
+              const [artistName, ...titleParts] = (r.title || "").split(" - ");
+              return {
+                id: r.id,
+                masterId: r.master_id || r.id,
+                title: titleParts.join(" - ") || r.title || "Unknown",
+                artist: artistName || "Unknown Artist",
+                year: parseInt(r.year || "0") || 0,
+                thumb: r.thumb || "",
+                genre: r.genre || [],
+                style: r.style || [],
+                community: r.community || { have: 0, want: 0 },
+              };
+            });
+
+          releases.push(...filtered);
+        } catch (err) {
+          console.error(`Search failed for style ${style.name}:`, err);
+        }
+      }
+
+      // Deduplicate by masterId
+      const uniqueReleases = Array.from(
+        new Map(releases.map((r) => [r.masterId, r])).values()
+      ).slice(0, 6);
+
+      if (uniqueReleases.length > 0) {
+        recommendations.push({
+          style: style.name,
+          reason,
+          basedOn: basedOnArtists,
+          releases: uniqueReleases,
+        });
+      }
+    }
 
     return NextResponse.json({
       recommendations,
-      analyzedGenres: genresToSearch,
-      gaps,
+      analyzedStyles: topStyles.map((s) => s.name),
+      hasLastfm: similarArtists.length > 0,
     });
   } catch (error) {
     console.error("Recommendations error:", error);
