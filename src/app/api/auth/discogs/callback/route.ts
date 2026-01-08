@@ -80,8 +80,9 @@ export async function GET(request: NextRequest) {
     });
 
     // Store profile data for UX (avatar, collection count)
-    if (profile.avatar_url) {
-      cookieStore.set("discogs_avatar", profile.avatar_url, {
+    const avatarUrl = profile.avatar_url || profile.avatar;
+    if (avatarUrl) {
+      cookieStore.set("discogs_avatar", avatarUrl, {
         httpOnly: false,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",

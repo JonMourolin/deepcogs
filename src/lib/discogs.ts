@@ -15,7 +15,8 @@ export interface DiscogsUser {
   username: string;
   resource_url: string;
   consumer_name?: string;
-  avatar_url?: string;
+  avatar_url?: string; // from /oauth/identity
+  avatar?: string; // from /users/{username}
   num_collection?: number;
   num_wantlist?: number;
 }
