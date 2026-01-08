@@ -39,50 +39,81 @@ interface TradeOpportunity {
   matchedWant: WantlistItem;
 }
 
+interface StyleCompatibility {
+  score: number;
+  sharedStyles: string[];
+  styleComparison: { style: string; myPercent: number; friendPercent: number }[];
+}
+
 interface ComparisonResult {
   friendUsername: string;
   friendCollection: DiscogsRelease[];
   overlap: DiscogsRelease[];
-  onlyMe: DiscogsRelease[];
-  onlyFriend: DiscogsRelease[];
-  compatibilityScore: number;
-  genreOverlap: { genre: string; myCount: number; friendCount: number }[];
+  styleCompatibility: StyleCompatibility;
   youCanOffer: TradeOpportunity[];
   theyCanOffer: TradeOpportunity[];
 }
 
-function calculateGenreComparison(
+function calculateStyleCompatibility(
   myCollection: DiscogsRelease[],
   friendCollection: DiscogsRelease[]
-): ComparisonResult["genreOverlap"] {
-  const myGenres: Record<string, number> = {};
-  const friendGenres: Record<string, number> = {};
+): StyleCompatibility {
+  const myStyles: Record<string, number> = {};
+  const friendStyles: Record<string, number> = {};
 
+  // Count styles in my collection
   myCollection.forEach((r) => {
-    r.basic_information.genres?.forEach((g) => {
-      myGenres[g] = (myGenres[g] || 0) + 1;
+    r.basic_information.styles?.forEach((s) => {
+      myStyles[s] = (myStyles[s] || 0) + 1;
     });
   });
 
+  // Count styles in friend's collection
   friendCollection.forEach((r) => {
-    r.basic_information.genres?.forEach((g) => {
-      friendGenres[g] = (friendGenres[g] || 0) + 1;
+    r.basic_information.styles?.forEach((s) => {
+      friendStyles[s] = (friendStyles[s] || 0) + 1;
     });
   });
 
-  const allGenres = new Set([
-    ...Object.keys(myGenres),
-    ...Object.keys(friendGenres),
+  const myTotal = myCollection.length;
+  const friendTotal = friendCollection.length;
+
+  // Get all styles from both collections
+  const allStyles = new Set([
+    ...Object.keys(myStyles),
+    ...Object.keys(friendStyles),
   ]);
 
-  return Array.from(allGenres)
-    .map((genre) => ({
-      genre,
-      myCount: myGenres[genre] || 0,
-      friendCount: friendGenres[genre] || 0,
-    }))
-    .sort((a, b) => b.myCount + b.friendCount - (a.myCount + a.friendCount))
-    .slice(0, 8);
+  // Calculate style comparison with percentages
+  const styleData = Array.from(allStyles).map((style) => {
+    const myCount = myStyles[style] || 0;
+    const friendCount = friendStyles[style] || 0;
+    const myPercent = myTotal > 0 ? (myCount / myTotal) * 100 : 0;
+    const friendPercent = friendTotal > 0 ? (friendCount / friendTotal) * 100 : 0;
+    // Overlap is the minimum of the two percentages (conservative measure)
+    const overlap = Math.min(myPercent, friendPercent);
+
+    return { style, myPercent, friendPercent, overlap };
+  });
+
+  // Calculate total compatibility score (sum of overlaps, max 100%)
+  const totalOverlap = styleData.reduce((sum, s) => sum + s.overlap, 0);
+  const score = Math.min(Math.round(totalOverlap), 100);
+
+  // Get shared styles (both have >3% presence) sorted by overlap
+  const sharedStyles = styleData
+    .filter((s) => s.myPercent >= 3 && s.friendPercent >= 3)
+    .sort((a, b) => b.overlap - a.overlap)
+    .slice(0, 5)
+    .map((s) => s.style);
+
+  // Get style comparison for display (top styles by combined presence)
+  const styleComparison = styleData
+    .sort((a, b) => (b.myPercent + b.friendPercent) - (a.myPercent + a.friendPercent))
+    .slice(0, 10)
+    .map(({ style, myPercent, friendPercent }) => ({ style, myPercent, friendPercent }));
+
+  return { score, sharedStyles, styleComparison };
 }
 
 function ReleaseCard({ release }: { release: DiscogsRelease }) {
@@ -203,7 +234,10 @@ export function FriendCompare({
         throw new Error("Friend's collection is empty or private");
       }
 
-      // Calculate collection comparison
+      // Calculate style-based compatibility
+      const styleCompatibility = calculateStyleCompatibility(myCollection, friendCollection);
+
+      // Calculate albums in common (for display purposes)
       const myMasterIds = new Set(
         myCollection.map((r) => r.basic_information.master_id)
       );
@@ -218,26 +252,6 @@ export function FriendCompare({
       const overlap = myCollection.filter((r) =>
         overlapMasterIds.has(r.basic_information.master_id)
       );
-
-      const onlyMe = myCollection.filter(
-        (r) =>
-          r.basic_information.master_id &&
-          !overlapMasterIds.has(r.basic_information.master_id)
-      );
-
-      const onlyFriend = friendCollection.filter(
-        (r) =>
-          r.basic_information.master_id &&
-          !overlapMasterIds.has(r.basic_information.master_id)
-      );
-
-      const totalUnique = new Set([...myMasterIds, ...friendMasterIds]).size;
-      const compatibilityScore =
-        totalUnique > 0
-          ? Math.round((overlapMasterIds.size / totalUnique) * 100)
-          : 0;
-
-      const genreOverlap = calculateGenreComparison(myCollection, friendCollection);
 
       // Fetch trade opportunities
       let youCanOffer: TradeOpportunity[] = [];
@@ -298,10 +312,7 @@ export function FriendCompare({
         friendUsername,
         friendCollection,
         overlap,
-        onlyMe,
-        onlyFriend,
-        compatibilityScore,
-        genreOverlap,
+        styleCompatibility,
         youCanOffer,
         theyCanOffer,
       });
@@ -409,48 +420,37 @@ export function FriendCompare({
         <div className="space-y-6">
           {/* Summary Cards */}
           <div className="grid md:grid-cols-2 gap-6">
-            {/* Compatibility Score */}
+            {/* Taste Compatibility */}
             <Card className="bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200">
               <CardContent className="pt-6 pb-6">
                 <div className="text-center">
                   <div className="text-5xl font-bold text-amber-600 mb-1">
-                    {result.compatibilityScore}%
+                    {result.styleCompatibility.score}%
                   </div>
                   <p className="text-sm text-gray-600">
-                    Collection Compatibility
+                    Taste Compatibility
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    {result.overlap.length} albums in common
+                    Based on style preferences
                   </p>
                 </div>
 
-                {/* Mini Venn diagram */}
-                <div className="flex items-center justify-center gap-2 mt-4">
-                  <div className="text-center">
-                    <div className="w-16 h-16 rounded-full bg-amber-200 flex items-center justify-center">
-                      <span className="font-bold text-sm text-amber-800">
-                        {result.onlyMe.length}
-                      </span>
+                {/* Shared styles */}
+                {result.styleCompatibility.sharedStyles.length > 0 && (
+                  <div className="mt-4 text-center">
+                    <p className="text-xs text-gray-500 mb-2">You both love</p>
+                    <div className="flex flex-wrap justify-center gap-1.5">
+                      {result.styleCompatibility.sharedStyles.map((style) => (
+                        <span
+                          key={style}
+                          className="px-2.5 py-1 text-xs font-medium rounded-full bg-amber-100 text-amber-800"
+                        >
+                          {style}
+                        </span>
+                      ))}
                     </div>
-                    <p className="text-xs mt-1 text-gray-500">Only you</p>
                   </div>
-                  <div className="text-center -mx-3 z-10">
-                    <div className="w-14 h-14 rounded-full bg-amber-500 flex items-center justify-center">
-                      <span className="font-bold text-sm text-white">
-                        {result.overlap.length}
-                      </span>
-                    </div>
-                    <p className="text-xs mt-1 font-medium text-gray-900">Both</p>
-                  </div>
-                  <div className="text-center">
-                    <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
-                      <span className="font-bold text-sm text-gray-700">
-                        {result.onlyFriend.length}
-                      </span>
-                    </div>
-                    <p className="text-xs mt-1 text-gray-500">Only them</p>
-                  </div>
-                </div>
+                )}
               </CardContent>
             </Card>
 
@@ -489,32 +489,35 @@ export function FriendCompare({
             </Card>
           </div>
 
-          {/* Genre Comparison */}
+          {/* Style Comparison */}
           <Card className="bg-white border-gray-200">
             <CardHeader className="pb-3">
-              <CardTitle className="text-gray-900 text-base">Genre Comparison</CardTitle>
+              <CardTitle className="text-gray-900 text-base">Style Comparison</CardTitle>
+              <CardDescription className="text-gray-500 text-xs">
+                How your style preferences compare (% of collection)
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid sm:grid-cols-2 gap-x-6 gap-y-3">
-                {result.genreOverlap.map((g) => (
-                  <div key={g.genre} className="space-y-1">
+                {result.styleCompatibility.styleComparison.map((s) => (
+                  <div key={s.style} className="space-y-1">
                     <div className="flex justify-between text-sm">
-                      <span className="font-medium text-gray-900">{g.genre}</span>
+                      <span className="font-medium text-gray-900">{s.style}</span>
                       <span className="text-xs text-gray-500">
-                        {g.myCount} / {g.friendCount}
+                        {s.myPercent.toFixed(0)}% / {s.friendPercent.toFixed(0)}%
                       </span>
                     </div>
                     <div className="flex h-1.5 rounded-full overflow-hidden bg-gray-100">
                       <div
                         className="bg-amber-500"
                         style={{
-                          width: `${(g.myCount / (g.myCount + g.friendCount)) * 100}%`,
+                          width: `${(s.myPercent / (s.myPercent + s.friendPercent)) * 100}%`,
                         }}
                       />
                       <div
                         className="bg-gray-300"
                         style={{
-                          width: `${(g.friendCount / (g.myCount + g.friendCount)) * 100}%`,
+                          width: `${(s.friendPercent / (s.myPercent + s.friendPercent)) * 100}%`,
                         }}
                       />
                     </div>
