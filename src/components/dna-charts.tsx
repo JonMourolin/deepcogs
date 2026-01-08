@@ -145,7 +145,7 @@ export function DNACharts({ releases }: DNAChartsProps) {
 
   return (
     <div className="space-y-6">
-      {/* Main Charts */}
+      {/* Genre & Era Charts */}
       <div className="grid md:grid-cols-2 gap-6">
         {/* Genre Distribution */}
         <Card className="bg-white border-gray-200">
@@ -229,7 +229,37 @@ export function DNACharts({ releases }: DNAChartsProps) {
             </div>
           </CardContent>
         </Card>
+      </div>
 
+      {/* Style Breakdown - moved here after Genre & Era */}
+      <Card className="bg-white border-gray-200">
+        <CardHeader>
+          <CardTitle className="text-gray-900">Style Breakdown</CardTitle>
+          <CardDescription className="text-gray-500">
+            More specific sub-genres in your collection
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            {analysis.styles.map((style, index) => (
+              <span
+                key={style.name}
+                className="px-3 py-1.5 rounded-full text-sm font-medium border"
+                style={{
+                  backgroundColor: `${COLORS[index % COLORS.length]}15`,
+                  color: COLORS[index % COLORS.length],
+                  borderColor: `${COLORS[index % COLORS.length]}30`,
+                }}
+              >
+                {style.name} ({style.value})
+              </span>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Labels & Oddities */}
+      <div className="grid md:grid-cols-2 gap-6">
         {/* Top Labels */}
         <Card className="bg-white border-gray-200">
           <CardHeader>
@@ -307,33 +337,6 @@ export function DNACharts({ releases }: DNAChartsProps) {
           </CardContent>
         </Card>
       </div>
-
-      {/* Top Styles */}
-      <Card className="bg-white border-gray-200">
-        <CardHeader>
-          <CardTitle className="text-gray-900">Style Breakdown</CardTitle>
-          <CardDescription className="text-gray-500">
-            More specific sub-genres in your collection
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            {analysis.styles.map((style, index) => (
-              <span
-                key={style.name}
-                className="px-3 py-1.5 rounded-full text-sm font-medium border"
-                style={{
-                  backgroundColor: `${COLORS[index % COLORS.length]}15`,
-                  color: COLORS[index % COLORS.length],
-                  borderColor: `${COLORS[index % COLORS.length]}30`,
-                }}
-              >
-                {style.name} ({style.value})
-              </span>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

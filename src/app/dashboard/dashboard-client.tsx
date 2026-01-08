@@ -6,10 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DNACharts } from "@/components/dna-charts";
-import { CollectionCompare } from "@/components/collection-compare";
+import { FriendCompare } from "@/components/friend-compare";
 import { Recommendations } from "@/components/recommendations";
 import { DNACard } from "@/components/dna-card";
-import { TradeFinder } from "@/components/trade-finder";
 import Link from "next/link";
 import type { DiscogsRelease } from "@/lib/discogs";
 
@@ -301,12 +300,7 @@ export function DashboardClient({ username }: DashboardClientProps) {
           {/* Compare Tab */}
           {activeTab === "compare" && (
             <div className="space-y-6">
-              <CollectionCompare
-                myUsername={username}
-                myCollection={collection?.releases || []}
-                isLoading={loading}
-              />
-              <TradeFinder
+              <FriendCompare
                 myUsername={username}
                 myCollection={collection?.releases || []}
                 isLoading={loading}
@@ -329,7 +323,7 @@ export function DashboardClient({ username }: DashboardClientProps) {
   );
 }
 
-// Stat Card Component
+// Stat Card Component - Compact version
 function StatCard({
   label,
   value,
@@ -345,24 +339,26 @@ function StatCard({
 }) {
   return (
     <Card className="bg-white">
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-500">{label}</p>
-            {loading ? (
-              <Skeleton className="h-8 w-20 mt-1" />
-            ) : (
-              <p className="text-2xl font-semibold text-gray-900 mt-1">{value}</p>
-            )}
-            {sublabel && !loading && (
-              <p className="text-xs text-amber-600 mt-0.5">{sublabel}</p>
-            )}
-          </div>
+      <CardContent className="p-3">
+        <div className="flex items-center gap-3">
           {icon && (
-            <div className="p-2 rounded-lg bg-gray-100 text-gray-600">
+            <div className="p-1.5 rounded-md bg-gray-100 text-gray-500 flex-shrink-0">
               {icon}
             </div>
           )}
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-medium text-gray-500 truncate">{label}</p>
+            {loading ? (
+              <Skeleton className="h-5 w-16 mt-0.5" />
+            ) : (
+              <div className="flex items-baseline gap-1.5">
+                <p className="text-lg font-semibold text-gray-900 truncate">{value}</p>
+                {sublabel && (
+                  <span className="text-xs text-amber-600 flex-shrink-0">{sublabel}</span>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
