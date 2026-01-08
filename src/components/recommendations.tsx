@@ -210,6 +210,20 @@ function ReleaseCard({
   );
 }
 
+// Artist names to exclude (compilations, various artists)
+const EXCLUDED_ARTISTS = new Set([
+  "various",
+  "va",
+  "various artists",
+  "v/a",
+  "v.a.",
+  "various artist",
+]);
+
+function isExcludedArtist(name: string): boolean {
+  return EXCLUDED_ARTISTS.has(name.toLowerCase().trim());
+}
+
 // Extract styles with their top artists from releases
 function analyzeCollection(releases: DiscogsRelease[]) {
   const styleCounts: Record<string, { count: number; artists: Record<string, number> }> = {};
@@ -223,9 +237,9 @@ function analyzeCollection(releases: DiscogsRelease[]) {
       ownedMasterIds.push(info.master_id);
     }
 
-    // Collect artist names
+    // Collect artist names (excluding various/VA)
     info.artists?.forEach((artist) => {
-      if (artist.name && !ownedArtistNames.includes(artist.name)) {
+      if (artist.name && !isExcludedArtist(artist.name) && !ownedArtistNames.includes(artist.name)) {
         ownedArtistNames.push(artist.name);
       }
     });
@@ -237,9 +251,9 @@ function analyzeCollection(releases: DiscogsRelease[]) {
       }
       styleCounts[style].count++;
 
-      // Associate artists with this style
+      // Associate artists with this style (excluding various/VA)
       info.artists?.forEach((artist) => {
-        if (artist.name) {
+        if (artist.name && !isExcludedArtist(artist.name)) {
           styleCounts[style].artists[artist.name] =
             (styleCounts[style].artists[artist.name] || 0) + 1;
         }

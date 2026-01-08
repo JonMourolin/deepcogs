@@ -50,8 +50,8 @@ export async function POST(request: NextRequest) {
     const ownedSet = new Set(ownedMasterIds);
     const ownedArtistsSet = new Set(ownedArtistNames.map((n) => n.toLowerCase()));
 
-    // Get top styles (up to 4)
-    const topStyles = styles.slice(0, 4);
+    // Get top styles (up to 6)
+    const topStyles = styles.slice(0, 6);
 
     // Collect artists from top styles for Last.fm lookup
     const artistsForLastfm: string[] = [];
