@@ -49,7 +49,6 @@ export async function GET(request: NextRequest) {
 
     // Fetch full profile for avatar and collection count
     const profile = await client.getUser(identity.username);
-    console.log("Profile response:", JSON.stringify(profile, null, 2));
 
     // Store access tokens in secure cookies
     cookieStore.set("discogs_access_token", accessTokens.oauth_token, {
