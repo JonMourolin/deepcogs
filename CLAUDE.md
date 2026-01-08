@@ -30,15 +30,23 @@ DeepCogs is a Next.js 16 App Router application that analyzes Discogs vinyl reco
 - `src/lib/discogs.ts` - Discogs API client with OAuth 1.0a implementation (PLAINTEXT signature method)
 - `src/app/api/auth/discogs/route.ts` - Initiates OAuth, stores token secret in cookie
 - `src/app/api/auth/discogs/callback/route.ts` - Exchanges verifier for access tokens
+- `src/app/api/auth/logout/route.ts` - Clears auth cookies and redirects to home
 
 **API Routes:**
-- `src/app/api/collection/route.ts` - Fetches user collection (up to 500 releases, paginated)
-- `src/app/api/recommendations/route.ts` - Searches Discogs for recommendations based on genre gaps
+- `src/app/api/collection/route.ts` - Fetches user collection (paginated)
+- `src/app/api/release/[id]/route.ts` - Fetches single release details (country, year)
+- `src/app/api/wantlist/route.ts` - Add/remove releases from wantlist (POST/DELETE)
+- `src/app/api/wantlist/[username]/route.ts` - Fetches a user's wantlist
+- `src/app/api/recommendations/route.ts` - Generates recommendations using genre/style analysis
+- `src/app/api/lastfm/similar/route.ts` - Queries Last.fm API for similar artists
 
 **Feature Components:**
 - `src/components/dna-charts.tsx` - Genre pie chart, decade bar chart, top labels (uses Recharts)
 - `src/components/collection-compare.tsx` - Compare collections between two users using `master_id` matching
+- `src/components/friend-compare.tsx` - Advanced comparison with cosine similarity scoring, style analysis, trade opportunities
+- `src/components/trade-finder.tsx` - Bidirectional trade matching between collections/wantlists
 - `src/components/recommendations.tsx` - Display recommendations with release cards
+- `src/components/vinyl-record.tsx` - Animated vinyl record visualization component
 
 ### Discogs API Notes
 
@@ -53,6 +61,7 @@ Required in `.env.local`:
 DISCOGS_CONSUMER_KEY=xxx
 DISCOGS_CONSUMER_SECRET=xxx
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+LASTFM_API_KEY=xxx              # Optional: enables similar artist recommendations
 ```
 
 ### Styling
@@ -74,10 +83,13 @@ main                    # Production-ready code
 
 ### Workflow
 
-1. **Create branch** before starting ANY work:
+1. **Sync main** before creating a branch (start from latest main to reduce conflicts):
    ```bash
+   git checkout main
+   git pull --rebase
    git checkout -b feature/feature-name
    ```
+   Optional safety checks: `git status`, `git log --oneline -5`
 
 2. **Commit** after completing logical units:
    ```bash
@@ -122,25 +134,52 @@ Types:
 
 ### Releasing a Version
 
-**Requires user approval at each step.**
+**Goal:** Ensure the Git tag (e.g. v1.2.3) points to the exact commit that is on main.
 
-1. User approves version bump
-2. Create release branch:
+1. **Create release branch:**
    ```bash
+   git checkout main
+   git pull --rebase
    git checkout -b chore/release-x.x.x
    ```
-3. **ALWAYS update `CHANGELOG.md`** with new version entry (never skip this)
-4. Commit changelog
-5. Bump version: `npm version patch|minor|major`
-6. **Verify version sync** before pushing:
-   - `package.json` version
-   - `package-lock.json` version
-   - `CHANGELOG.md` has matching version entry
-   - Git tag will match (created by npm version)
-7. Push branch and create PR
-8. **STOP. Wait for user approval.**
-9. After user approves, merge PR
-10. Push tags: `git push --tags`
+
+2. **Update CHANGELOG.md**, then commit:
+   ```bash
+   git add CHANGELOG.md
+   git commit -m "docs: update changelog for vX.X.X"
+   ```
+
+3. **Push and open a PR:**
+   ```bash
+   git push -u origin chore/release-x.x.x
+   gh pr create --title "chore(release): vX.X.X" --body "Release vX.X.X"
+   ```
+
+4. **STOP. Wait for user approval.**
+   After approval, merge the PR on GitHub (or via CLI if allowed).
+
+5. **After PR is merged**, switch back to main and pull:
+   ```bash
+   git checkout main
+   git pull --rebase
+   ```
+
+6. **Bump version and create tag on main:**
+   ```bash
+   npm version patch|minor|major
+   ```
+
+7. **Push the commit and tag:**
+   ```bash
+   git push
+   git push --tags
+   ```
+
+8. **(Optional)** Verify tag points to main HEAD:
+   ```bash
+   git show --no-patch --decorate
+   git tag --points-at HEAD
+   ```
 
 ### Deploying
 
