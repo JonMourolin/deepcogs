@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DNACharts } from "@/components/dna-charts";
 import { FriendCompare } from "@/components/friend-compare";
 import { Recommendations } from "@/components/recommendations";
@@ -13,11 +13,57 @@ import type { DiscogsRelease } from "@/lib/discogs";
 
 interface DashboardClientProps {
   username: string;
+  avatarUrl?: string;
+  expectedTotal?: number;
 }
 
 interface CollectionData {
   releases: DiscogsRelease[];
   total: number;
+}
+
+interface CachedCollection {
+  data: CollectionData;
+  timestamp: number;
+  username: string;
+}
+
+const COLLECTION_CACHE_KEY = "deepcogs_collection";
+const COLLECTION_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
+function loadCollectionFromCache(username: string, expectedTotal?: number): CollectionData | null {
+  try {
+    const cached = localStorage.getItem(COLLECTION_CACHE_KEY);
+    if (!cached) return null;
+
+    const { data, timestamp, username: cachedUsername }: CachedCollection = JSON.parse(cached);
+
+    // Invalidate if different user
+    if (cachedUsername !== username) return null;
+
+    // Invalidate if TTL expired
+    if (Date.now() - timestamp > COLLECTION_CACHE_TTL) return null;
+
+    // Invalidate if collection size changed (if we know expected total)
+    if (expectedTotal !== undefined && data.total !== expectedTotal) return null;
+
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+function saveCollectionToCache(data: CollectionData, username: string): void {
+  try {
+    const cached: CachedCollection = {
+      data,
+      timestamp: Date.now(),
+      username,
+    };
+    localStorage.setItem(COLLECTION_CACHE_KEY, JSON.stringify(cached));
+  } catch {
+    // localStorage might be full or disabled
+  }
 }
 
 type TabValue = "dna" | "compare" | "discover";
@@ -55,10 +101,12 @@ const VinylIcon = () => (
   </svg>
 );
 
-export function DashboardClient({ username }: DashboardClientProps) {
+export function DashboardClient({ username, avatarUrl, expectedTotal }: DashboardClientProps) {
   const [collection, setCollection] = useState<CollectionData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadedCount, setLoadedCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [fromCache, setFromCache] = useState(false);
   const [activeTab, setActiveTab] = useState<TabValue>("dna");
 
   const fetchPage = useCallback(async (page: number, existingReleases: DiscogsRelease[] = []) => {
@@ -75,33 +123,48 @@ export function DashboardClient({ username }: DashboardClientProps) {
     };
   }, [username]);
 
-  useEffect(() => {
-    async function fetchCollection() {
-      try {
-        setLoading(true);
-        let allReleases: DiscogsRelease[] = [];
-        let currentPageNum = 1;
-        let hasMore = true;
-        let total = 0;
-
-        while (hasMore) {
-          const result = await fetchPage(currentPageNum, allReleases);
-          allReleases = result.releases;
-          total = result.total;
-          hasMore = result.hasMore;
-          currentPageNum = result.page + 1;
-        }
-
-        setCollection({ releases: allReleases, total });
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load collection");
-      } finally {
+  const fetchCollection = useCallback(async (bypassCache = false) => {
+    // Try cache first (unless bypassing)
+    if (!bypassCache) {
+      const cached = loadCollectionFromCache(username, expectedTotal);
+      if (cached) {
+        setCollection(cached);
+        setFromCache(true);
         setLoading(false);
+        return;
       }
     }
 
+    try {
+      setLoading(true);
+      setFromCache(false);
+      let allReleases: DiscogsRelease[] = [];
+      let currentPageNum = 1;
+      let hasMore = true;
+      let total = 0;
+
+      while (hasMore) {
+        const result = await fetchPage(currentPageNum, allReleases);
+        allReleases = result.releases;
+        total = result.total;
+        hasMore = result.hasMore;
+        currentPageNum = result.page + 1;
+        setLoadedCount(allReleases.length);
+      }
+
+      const collectionData = { releases: allReleases, total };
+      setCollection(collectionData);
+      saveCollectionToCache(collectionData, username);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load collection");
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchPage, username, expectedTotal]);
+
+  useEffect(() => {
     fetchCollection();
-  }, [fetchPage]);
+  }, [fetchCollection]);
 
   // Calculate stats from collection
   const stats = collection ? calculateStats(collection.releases) : null;
@@ -130,6 +193,7 @@ export function DashboardClient({ username }: DashboardClientProps) {
         <div className="p-4 border-b border-gray-100">
           <div className="flex items-center gap-3 p-2 rounded-lg bg-gray-50">
             <Avatar className="w-9 h-9">
+              {avatarUrl && <AvatarImage src={avatarUrl} alt={username} />}
               <AvatarFallback className="bg-amber-100 text-amber-700 text-sm font-medium">
                 {username[0].toUpperCase()}
               </AvatarFallback>
@@ -137,9 +201,27 @@ export function DashboardClient({ username }: DashboardClientProps) {
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900 truncate">{username}</p>
               <p className="text-xs text-gray-500">
-                {loading ? "Loading..." : `${collection?.total || 0} releases`}
+                {loading
+                  ? expectedTotal
+                    ? `Loading ${loadedCount}/${expectedTotal}...`
+                    : `Loading ${loadedCount}...`
+                  : `${collection?.total || 0} releases`}
+                {fromCache && !loading && (
+                  <span className="text-gray-400"> (cached)</span>
+                )}
               </p>
             </div>
+            {!loading && (
+              <button
+                onClick={() => fetchCollection(true)}
+                className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-colors"
+                title="Refresh collection"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
 

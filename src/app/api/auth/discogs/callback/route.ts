@@ -47,6 +47,9 @@ export async function GET(request: NextRequest) {
     );
     const identity = await client.getIdentity();
 
+    // Fetch full profile for avatar and collection count
+    const profile = await client.getUser(identity.username);
+
     // Store access tokens in secure cookies
     cookieStore.set("discogs_access_token", accessTokens.oauth_token, {
       httpOnly: true,
@@ -75,6 +78,28 @@ export async function GET(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 30, // 30 days
       path: "/",
     });
+
+    // Store profile data for UX (avatar, collection count)
+    const avatarUrl = profile.avatar_url || profile.avatar;
+    if (avatarUrl) {
+      cookieStore.set("discogs_avatar", avatarUrl, {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 30,
+        path: "/",
+      });
+    }
+
+    if (profile.num_collection !== undefined) {
+      cookieStore.set("discogs_collection_count", String(profile.num_collection), {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 30,
+        path: "/",
+      });
+    }
 
     // Clean up temporary cookie
     cookieStore.delete("discogs_oauth_token_secret");

@@ -44,6 +44,45 @@ interface RecommendationsData {
   hasLastfm: boolean;
 }
 
+interface CachedRecommendations {
+  data: RecommendationsData;
+  timestamp: number;
+  collectionSize: number;
+}
+
+const CACHE_KEY = "deepcogs_recommendations";
+const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
+function loadFromCache(collectionSize: number): RecommendationsData | null {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (!cached) return null;
+
+    const { data, timestamp, collectionSize: cachedSize }: CachedRecommendations = JSON.parse(cached);
+
+    // Invalidate if collection size changed or TTL expired
+    if (cachedSize !== collectionSize) return null;
+    if (Date.now() - timestamp > CACHE_TTL) return null;
+
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+function saveToCache(data: RecommendationsData, collectionSize: number): void {
+  try {
+    const cached: CachedRecommendations = {
+      data,
+      timestamp: Date.now(),
+      collectionSize,
+    };
+    localStorage.setItem(CACHE_KEY, JSON.stringify(cached));
+  } catch {
+    // localStorage might be full or disabled
+  }
+}
+
 function ReleaseCard({
   release,
   wantlistStatus,
@@ -281,6 +320,7 @@ export function Recommendations({ releases, isLoading }: RecommendationsProps) {
     useState<RecommendationsData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fromCache, setFromCache] = useState(false);
   const [wantlistStatus, setWantlistStatus] = useState<Record<number, WantlistStatus>>({});
 
   const handleAddToWantlist = useCallback(async (releaseId: number) => {
@@ -304,11 +344,22 @@ export function Recommendations({ releases, isLoading }: RecommendationsProps) {
     }
   }, []);
 
-  const fetchRecommendations = async () => {
+  const fetchRecommendations = useCallback(async (bypassCache = false) => {
     if (releases.length === 0) return;
+
+    // Try cache first (unless bypassing)
+    if (!bypassCache) {
+      const cached = loadFromCache(releases.length);
+      if (cached) {
+        setRecommendations(cached);
+        setFromCache(true);
+        return;
+      }
+    }
 
     setLoading(true);
     setError(null);
+    setFromCache(false);
 
     try {
       // Analyze collection for styles and artists
@@ -326,6 +377,7 @@ export function Recommendations({ releases, isLoading }: RecommendationsProps) {
 
       const data = await response.json();
       setRecommendations(data);
+      saveToCache(data, releases.length);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to load recommendations"
@@ -333,7 +385,7 @@ export function Recommendations({ releases, isLoading }: RecommendationsProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [releases]);
 
   // Auto-fetch on mount if we have releases
   useEffect(() => {
@@ -404,12 +456,15 @@ export function Recommendations({ releases, isLoading }: RecommendationsProps) {
                 {recommendations?.hasLastfm
                   ? "Based on similar artists from Last.fm and your collection styles"
                   : "Based on your collection styles"}
+                {fromCache && (
+                  <span className="ml-2 text-xs text-gray-400">(cached)</span>
+                )}
               </CardDescription>
             </div>
             <Button
               variant="outline"
               size="sm"
-              onClick={fetchRecommendations}
+              onClick={() => fetchRecommendations(true)}
               disabled={loading}
               className="border-gray-200 text-gray-700 hover:bg-gray-100"
             >
