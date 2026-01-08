@@ -8,7 +8,6 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DNACharts } from "@/components/dna-charts";
 import { FriendCompare } from "@/components/friend-compare";
 import { Recommendations } from "@/components/recommendations";
-import { DNACard } from "@/components/dna-card";
 import Link from "next/link";
 import type { DiscogsRelease } from "@/lib/discogs";
 
@@ -266,16 +265,7 @@ export function DashboardClient({ username }: DashboardClientProps) {
                   ))}
                 </div>
               ) : collection ? (
-                <>
-                  <DNACharts releases={collection.releases} />
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <DNACard
-                      username={username}
-                      releases={collection.releases}
-                      isLoading={loading}
-                    />
-                  </div>
-                </>
+                <DNACharts releases={collection.releases} />
               ) : (
                 <Card className="bg-white">
                   <CardContent className="py-12 text-center">
