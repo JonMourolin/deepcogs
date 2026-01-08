@@ -10,9 +10,6 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
-  PieChart,
-  Pie,
-  Cell,
   BarChart,
   Bar,
   XAxis,
@@ -20,6 +17,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { DNAHelix } from "@/components/dna-helix";
 import type { DiscogsRelease } from "@/lib/discogs";
 
 interface DNAChartsProps {
@@ -147,48 +145,22 @@ export function DNACharts({ releases }: DNAChartsProps) {
     <div className="space-y-6">
       {/* Genre & Era Charts */}
       <div className="grid md:grid-cols-2 gap-6">
-        {/* Genre Distribution */}
+        {/* Genre Distribution - DNA Helix */}
         <Card className="bg-white border-gray-200">
           <CardHeader>
             <CardTitle className="text-gray-900">Genre DNA</CardTitle>
             <CardDescription className="text-gray-500">
-              Your collection&apos;s genre breakdown
+              Your collection&apos;s genetic makeup
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={analysis.genres}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={2}
-                    dataKey="value"
-                    label={({ name, percent }) =>
-                      `${name} (${((percent ?? 0) * 100).toFixed(0)}%)`
-                    }
-                    labelLine={false}
-                  >
-                    {analysis.genres.map((_, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      background: "#fff",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "8px",
-                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+            <div className="h-[320px] flex items-center justify-center">
+              <DNAHelix
+                genres={analysis.genres}
+                total={analysis.totalReleases}
+                height={300}
+                animated
+              />
             </div>
           </CardContent>
         </Card>
