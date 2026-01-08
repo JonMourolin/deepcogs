@@ -21,8 +21,9 @@ interface RecommendationsProps {
 }
 
 interface Recommendation {
-  genre: string;
+  style: string;
   reason: string;
+  basedOn: string[];
   releases: Array<{
     id: number;
     masterId: number;
@@ -33,12 +34,14 @@ interface Recommendation {
     genre: string[];
     style: string[];
     community: { have: number; want: number };
+    similarTo?: string;
   }>;
 }
 
 interface RecommendationsData {
   recommendations: Recommendation[];
-  gaps: string[];
+  analyzedStyles: string[];
+  hasLastfm: boolean;
 }
 
 function ReleaseCard({
@@ -85,13 +88,21 @@ function ReleaseCard({
             {release.artist} {release.year ? `• ${release.year}` : ""}
           </p>
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-xs text-gray-500">
-              {release.community.have.toLocaleString()} have
-            </span>
-            <span className="text-xs text-gray-500">•</span>
-            <span className="text-xs text-gray-500">
-              {release.community.want.toLocaleString()} want
-            </span>
+            {release.similarTo ? (
+              <span className="text-xs text-amber-600">
+                Similar to {release.similarTo}
+              </span>
+            ) : (
+              <>
+                <span className="text-xs text-gray-500">
+                  {release.community.have.toLocaleString()} have
+                </span>
+                <span className="text-xs text-gray-500">•</span>
+                <span className="text-xs text-gray-500">
+                  {release.community.want.toLocaleString()} want
+                </span>
+              </>
+            )}
           </div>
         </div>
       </a>
@@ -199,6 +210,72 @@ function ReleaseCard({
   );
 }
 
+// Artist names to exclude (compilations, various artists)
+const EXCLUDED_ARTISTS = new Set([
+  "various",
+  "va",
+  "various artists",
+  "v/a",
+  "v.a.",
+  "various artist",
+]);
+
+function isExcludedArtist(name: string): boolean {
+  return EXCLUDED_ARTISTS.has(name.toLowerCase().trim());
+}
+
+// Extract styles with their top artists from releases
+function analyzeCollection(releases: DiscogsRelease[]) {
+  const styleCounts: Record<string, { count: number; artists: Record<string, number> }> = {};
+  const ownedMasterIds: number[] = [];
+  const ownedArtistNames: string[] = [];
+
+  releases.forEach((release) => {
+    const info = release.basic_information;
+
+    if (info.master_id) {
+      ownedMasterIds.push(info.master_id);
+    }
+
+    // Collect artist names (excluding various/VA)
+    info.artists?.forEach((artist) => {
+      if (artist.name && !isExcludedArtist(artist.name) && !ownedArtistNames.includes(artist.name)) {
+        ownedArtistNames.push(artist.name);
+      }
+    });
+
+    // Count styles and associate artists
+    info.styles?.forEach((style) => {
+      if (!styleCounts[style]) {
+        styleCounts[style] = { count: 0, artists: {} };
+      }
+      styleCounts[style].count++;
+
+      // Associate artists with this style (excluding various/VA)
+      info.artists?.forEach((artist) => {
+        if (artist.name && !isExcludedArtist(artist.name)) {
+          styleCounts[style].artists[artist.name] =
+            (styleCounts[style].artists[artist.name] || 0) + 1;
+        }
+      });
+    });
+  });
+
+  // Convert to sorted array with top artists per style
+  const styles = Object.entries(styleCounts)
+    .map(([name, data]) => ({
+      name,
+      count: data.count,
+      artists: Object.entries(data.artists)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 5)
+        .map(([artistName]) => artistName),
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  return { styles, ownedMasterIds, ownedArtistNames };
+}
+
 export function Recommendations({ releases, isLoading }: RecommendationsProps) {
   const [recommendations, setRecommendations] =
     useState<RecommendationsData | null>(null);
@@ -234,28 +311,13 @@ export function Recommendations({ releases, isLoading }: RecommendationsProps) {
     setError(null);
 
     try {
-      // Calculate genres from releases
-      const genreCounts: Record<string, number> = {};
-      const ownedMasterIds: number[] = [];
-
-      releases.forEach((release) => {
-        const info = release.basic_information;
-        if (info.master_id) {
-          ownedMasterIds.push(info.master_id);
-        }
-        info.genres?.forEach((genre) => {
-          genreCounts[genre] = (genreCounts[genre] || 0) + 1;
-        });
-      });
-
-      const genres = Object.entries(genreCounts)
-        .map(([name, count]) => ({ name, count }))
-        .sort((a, b) => b.count - a.count);
+      // Analyze collection for styles and artists
+      const { styles, ownedMasterIds, ownedArtistNames } = analyzeCollection(releases);
 
       const response = await fetch("/api/recommendations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ genres, ownedMasterIds }),
+        body: JSON.stringify({ styles, ownedMasterIds, ownedArtistNames }),
       });
 
       if (!response.ok) {
@@ -339,7 +401,9 @@ export function Recommendations({ releases, isLoading }: RecommendationsProps) {
             <div>
               <CardTitle className="text-gray-900">Smart Recommendations</CardTitle>
               <CardDescription className="text-gray-500">
-                Based on your collection DNA, here are releases you might enjoy
+                {recommendations?.hasLastfm
+                  ? "Based on similar artists from Last.fm and your collection styles"
+                  : "Based on your collection styles"}
               </CardDescription>
             </div>
             <Button
@@ -425,37 +489,36 @@ export function Recommendations({ releases, isLoading }: RecommendationsProps) {
 
       {recommendations && recommendations.recommendations.length > 0 && (
         <>
-          {/* Gaps indicator */}
-          {recommendations.gaps.length > 0 && (
+          {/* Analyzed styles indicator */}
+          {recommendations.analyzedStyles.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-sm text-gray-500">
-                Genres to explore:
+                Analyzing styles:
               </span>
-              {recommendations.gaps.map((gap) => (
-                <Badge key={gap} variant="secondary" className="bg-gray-100 text-gray-700">
-                  {gap}
+              {recommendations.analyzedStyles.map((style) => (
+                <Badge key={style} variant="secondary" className="bg-gray-100 text-gray-700">
+                  {style}
                 </Badge>
               ))}
+              {recommendations.hasLastfm && (
+                <Badge variant="outline" className="border-amber-200 text-amber-600">
+                  + Last.fm
+                </Badge>
+              )}
             </div>
           )}
 
           {/* Recommendation cards */}
           <div className="grid md:grid-cols-2 gap-6">
             {recommendations.recommendations.map((rec) => (
-              <Card key={rec.genre} className="bg-white border-gray-200">
+              <Card key={rec.style} className="bg-white border-gray-200">
                 <CardHeader>
                   <CardTitle className="text-lg text-gray-900 flex items-center gap-2">
-                    {rec.genre}
-                    {recommendations.gaps.includes(rec.genre) && (
-                      <Badge
-                        variant="outline"
-                        className="text-xs font-normal border-amber-200 text-amber-600"
-                      >
-                        New territory
-                      </Badge>
-                    )}
+                    {rec.style}
                   </CardTitle>
-                  <CardDescription className="text-gray-500">{rec.reason}</CardDescription>
+                  <CardDescription className="text-gray-500">
+                    {rec.reason}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
