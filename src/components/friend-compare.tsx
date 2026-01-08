@@ -431,7 +431,7 @@ export function FriendCompare({
                     Taste Compatibility
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    Based on style preferences
+                    Higher = more similar style preferences
                   </p>
                 </div>
 
@@ -496,6 +496,17 @@ export function FriendCompare({
               <CardDescription className="text-gray-500 text-xs">
                 How your style preferences compare (% of collection)
               </CardDescription>
+              {/* Legend */}
+              <div className="flex items-center gap-4 mt-2">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-amber-500" />
+                  <span className="text-xs text-gray-600">You</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-gray-400" />
+                  <span className="text-xs text-gray-600">{result.friendUsername}</span>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="grid sm:grid-cols-2 gap-x-6 gap-y-3">
@@ -504,20 +515,22 @@ export function FriendCompare({
                     <div className="flex justify-between text-sm">
                       <span className="font-medium text-gray-900">{s.style}</span>
                       <span className="text-xs text-gray-500">
-                        {s.myPercent.toFixed(0)}% / {s.friendPercent.toFixed(0)}%
+                        <span className="text-amber-600">{s.myPercent.toFixed(0)}%</span>
+                        {" / "}
+                        <span className="text-gray-500">{s.friendPercent.toFixed(0)}%</span>
                       </span>
                     </div>
                     <div className="flex h-1.5 rounded-full overflow-hidden bg-gray-100">
                       <div
                         className="bg-amber-500"
                         style={{
-                          width: `${(s.myPercent / (s.myPercent + s.friendPercent)) * 100}%`,
+                          width: `${(s.myPercent / (s.myPercent + s.friendPercent || 1)) * 100}%`,
                         }}
                       />
                       <div
-                        className="bg-gray-300"
+                        className="bg-gray-400"
                         style={{
-                          width: `${(s.friendPercent / (s.myPercent + s.friendPercent)) * 100}%`,
+                          width: `${(s.friendPercent / (s.myPercent + s.friendPercent || 1)) * 100}%`,
                         }}
                       />
                     </div>
