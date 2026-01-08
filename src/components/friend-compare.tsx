@@ -44,6 +44,7 @@ interface StyleCompatibility {
   sharedStyles: string[];
   styleComparison: { style: string; myPercent: number; friendPercent: number }[];
   topOverlaps: { style: string; overlap: number }[];
+  biggestDifferences: { style: string; myPercent: number; friendPercent: number }[];
 }
 
 interface ComparisonResult {
@@ -147,7 +148,18 @@ function calculateStyleCompatibility(
       overlap: totalContribution > 0 ? Math.round((s.contribution / totalContribution) * 100) : 0,
     }));
 
-  return { score, sharedStyles, styleComparison, topOverlaps };
+  // Find biggest differences (one has significantly more than the other)
+  const biggestDifferences = styleData
+    .map((s) => ({
+      ...s,
+      diff: Math.abs(s.myPercent - s.friendPercent),
+    }))
+    .filter((s) => s.diff > 3 && (s.myPercent > 2 || s.friendPercent > 2)) // meaningful difference
+    .sort((a, b) => b.diff - a.diff)
+    .slice(0, 3)
+    .map(({ style, myPercent, friendPercent }) => ({ style, myPercent, friendPercent }));
+
+  return { score, sharedStyles, styleComparison, topOverlaps, biggestDifferences };
 }
 
 function ReleaseCard({ release }: { release: DiscogsRelease }) {
@@ -466,26 +478,66 @@ export function FriendCompare({
                   </p>
                 </div>
 
-                {/* Score breakdown */}
-                {result.styleCompatibility.topOverlaps.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-amber-200">
-                    <p className="text-xs text-gray-600 mb-2 text-center">
-                      Cosine similarity of your style distributions.
-                    </p>
-                    <p className="text-xs text-gray-500 mb-3 text-center">
-                      100% = identical taste, 0% = no overlap
-                    </p>
-                    <p className="text-xs text-gray-500 mb-1">Biggest shared preferences:</p>
-                    <div className="text-xs text-gray-500 space-y-0.5">
-                      {result.styleCompatibility.topOverlaps.map((o) => (
-                        <div key={o.style} className="flex justify-between">
-                          <span>{o.style}</span>
-                          <span className="text-gray-400">{o.overlap}% of match</span>
-                        </div>
-                      ))}
+                {/* Score explanation */}
+                <div className="mt-4 pt-4 border-t border-amber-200">
+                  <p className="text-xs text-gray-600 mb-2 text-center font-medium">
+                    How it works
+                  </p>
+                  <p className="text-xs text-gray-500 mb-3 leading-relaxed">
+                    Cosine similarity measures the angle between your style vectors.
+                    Think of it as: are you pointing in the same direction in music taste?
+                  </p>
+                  <div className="text-xs text-gray-400 space-y-0.5 mb-4">
+                    <div className="flex justify-between">
+                      <span>~90%+</span>
+                      <span>Nearly identical taste</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>~70%</span>
+                      <span>Similar with different emphasis</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>~40%</span>
+                      <span>Some overlap, different tastes</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>&lt;20%</span>
+                      <span>Very different collections</span>
                     </div>
                   </div>
-                )}
+
+                  {result.styleCompatibility.topOverlaps.length > 0 && (
+                    <>
+                      <p className="text-xs text-gray-600 mb-1 font-medium">Biggest shared preferences:</p>
+                      <div className="text-xs text-gray-500 space-y-0.5 mb-3">
+                        {result.styleCompatibility.topOverlaps.map((o) => (
+                          <div key={o.style} className="flex justify-between">
+                            <span>{o.style}</span>
+                            <span className="text-amber-600">{o.overlap}% of match</span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+
+                  {result.styleCompatibility.biggestDifferences.length > 0 && (
+                    <>
+                      <p className="text-xs text-gray-600 mb-1 font-medium">Biggest differences:</p>
+                      <div className="text-xs text-gray-500 space-y-0.5">
+                        {result.styleCompatibility.biggestDifferences.map((d) => (
+                          <div key={d.style} className="flex justify-between">
+                            <span>{d.style}</span>
+                            <span className="text-gray-400">
+                              <span className="text-amber-600">{d.myPercent.toFixed(0)}%</span>
+                              {" vs "}
+                              <span>{d.friendPercent.toFixed(0)}%</span>
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
