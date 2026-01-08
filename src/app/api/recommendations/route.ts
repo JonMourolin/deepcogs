@@ -144,7 +144,8 @@ export async function POST(request: NextRequest) {
         try {
           const searchResult = await client.search(
             `${artist.name}`,
-            "master"
+            "master",
+            { format: "Vinyl", sort: "want", sort_order: "desc" }
           );
           const results = (searchResult as { results?: Array<{
             id: number;
@@ -186,48 +187,6 @@ export async function POST(request: NextRequest) {
           await new Promise((resolve) => setTimeout(resolve, 100));
         } catch (err) {
           console.error(`Search failed for artist ${artist.name}:`, err);
-        }
-      }
-
-      // If no Last.fm results, fall back to style search
-      if (releases.length === 0) {
-        try {
-          const searchResult = await client.search(style.name, "master");
-          const results = (searchResult as { results?: Array<{
-            id: number;
-            master_id?: number;
-            title: string;
-            year?: string;
-            thumb?: string;
-            genre?: string[];
-            style?: string[];
-            community?: { have: number; want: number };
-          }> }).results || [];
-
-          const filtered = results
-            .filter((r) => {
-              const masterId = r.master_id || r.id;
-              return masterId && !ownedSet.has(masterId);
-            })
-            .slice(0, 6)
-            .map((r) => {
-              const [artistName, ...titleParts] = (r.title || "").split(" - ");
-              return {
-                id: r.id,
-                masterId: r.master_id || r.id,
-                title: titleParts.join(" - ") || r.title || "Unknown",
-                artist: artistName || "Unknown Artist",
-                year: parseInt(r.year || "0") || 0,
-                thumb: r.thumb || "",
-                genre: r.genre || [],
-                style: r.style || [],
-                community: r.community || { have: 0, want: 0 },
-              };
-            });
-
-          releases.push(...filtered);
-        } catch (err) {
-          console.error(`Search failed for style ${style.name}:`, err);
         }
       }
 
